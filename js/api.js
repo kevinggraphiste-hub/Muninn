@@ -56,6 +56,26 @@ const API = (() => {
     const ms = Math.min(2000 * Math.pow(2, attempt), 16000); // 2s, 4s, 8s, max 16s
     await new Promise(r => setTimeout(r, ms));
   }
+  // Mappe (status, errText) → message utilisateur typé, calqué sur Gungnir.
+  // Distingue : clé invalide (401/403), crédits épuisés (402),
+  // modèle introuvable (404), serveur indisponible (5xx).
+  function formatProviderError(providerName, status, errText) {
+    const txt = String(errText || '').trim();
+    if (status === 401 || status === 403 || /unauthor|invalid.*api.*key|invalid.*token|authentication/i.test(txt)) {
+      return `${providerName} : clé API invalide ou expirée — vérifiez-la dans le modal "Clés API".`;
+    }
+    if (status === 402 || /payment|insufficient|credit|quota.*exceeded.*pay/i.test(txt)) {
+      return `${providerName} : crédits épuisés ou paiement requis sur votre compte.`;
+    }
+    if (status === 404 || /model.*not.*found|no.*such.*model|unknown.*model/i.test(txt)) {
+      return `${providerName} : modèle introuvable (peut-être renommé ou retiré).`;
+    }
+    if (status >= 500 && status < 600) {
+      return `${providerName} : serveur temporairement indisponible (HTTP ${status}). Réessayez dans quelques instants.`;
+    }
+    return `${providerName} erreur ${status}: ${txt || '(pas de détail)'}`;
+  }
+
   function isRateLimitError(status, errText) {
     return status === 429 || /rate.limit|too many request|quota.*exceed|resource.*exhaust/i.test(errText);
   }
@@ -221,7 +241,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`Gemini erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('Gemini', response.status, errText));
         return;
       }
       break; // Réponse OK — on passe au lecteur SSE
@@ -323,7 +343,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`Anthropic erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('Anthropic', response.status, errText));
         return;
       }
       break; // Réponse OK — on passe au lecteur SSE
@@ -470,7 +490,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`Perplexity erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('Perplexity', response.status, errText));
         return;
       }
       break;
@@ -555,7 +575,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`DeepSeek erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('DeepSeek', response.status, errText));
         return;
       }
       break;
@@ -634,7 +654,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`Qwen erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('Qwen', response.status, errText));
         return;
       }
       break;
@@ -718,7 +738,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`OpenRouter erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('OpenRouter', response.status, errText));
         return;
       }
       break;
@@ -826,7 +846,7 @@ const API = (() => {
           workingMessages = trimContextMessages(messages, Math.pow(0.5, trimCount));
           continue;
         }
-        onError(`Mistral erreur ${response.status}: ${errText}`);
+        onError(formatProviderError('Mistral', response.status, errText));
         return;
       }
       break;
@@ -899,7 +919,7 @@ const API = (() => {
     if (!response.ok) {
       let errText = '';
       try { const j = await response.json(); errText = j?.error?.message || ''; } catch {}
-      onError(`${provider.name} erreur ${response.status}: ${errText}`);
+      onError(formatProviderError(provider.name, response.status, errText));
       return;
     }
 
