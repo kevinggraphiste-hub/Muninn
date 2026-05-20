@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark-scarlet">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Muninn</title>
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+  <!-- Overlay pour fermer la sidebar sur mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="app-container">
+
+    <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="logo-clip-sm">
+                <circle cx="16" cy="16" r="13.5"/>
+              </clipPath>
+            </defs>
+            <!-- Fond médaillon -->
+            <circle cx="16" cy="16" r="14.8" fill="#131311"/>
+            <!-- Logo SVG -->
+            <image href="assets/logo.svg" x="1.5" y="1" width="29" height="30" clip-path="url(#logo-clip-sm)" preserveAspectRatio="xMidYMid meet"/>
+            <!-- Anneau accent -->
+            <circle cx="16" cy="16" r="14.8" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+          </svg>
+          <span class="logo-text">Muninn</span>
+        </div>
+        <button class="btn-icon" id="newChatBtn" title="Nouvelle conversation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-section-label">Conversations
+        <button class="btn-icon btn-icon-xs" id="newFolderBtn" title="Nouveau dossier">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+      <div class="conv-search-wrap">
+        <span class="conv-search-icon">🔍</span>
+        <input type="search" id="convSearch" placeholder="Rechercher..." class="conv-search-input" autocomplete="off">
+        <button class="conv-search-clear" id="convSearchClear" style="display:none">✕</button>
+      </div>
+      <div class="conversations-list" id="convList">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div class="sidebar-footer">
+        <!-- Guide des modèles -->
+        <button class="sidebar-guide-btn" id="guideBtn" title="Guide des modèles">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>Guide des modèles</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-left:auto;opacity:.5;">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+
+        <!-- Theme selector -->
+        <div class="theme-selector">
+          <span class="theme-label">Thème</span>
+          <div class="theme-buttons">
+            <button class="theme-btn" data-theme="dark-scarlet" title="Dark Scarlet (défaut)">
+              <span class="theme-dot scarlet"></span>
+            </button>
+            <button class="theme-btn" data-theme="dark-bronze" title="Dark Bronze">
+              <span class="theme-dot bronze"></span>
+            </button>
+            <button class="theme-btn" data-theme="daltonien" title="Daltonien (accessible)">
+              <span class="theme-dot daltonien"></span>
+            </button>
+            <button class="theme-btn" data-theme="light" title="Clair">
+              <span class="theme-dot light-dot"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Font size selector -->
+        <div class="fontsize-selector">
+          <span class="theme-label">Texte</span>
+          <div class="fontsize-buttons">
+            <button class="fontsize-btn" data-size="sm" title="Petit">A</button>
+            <button class="fontsize-btn active" data-size="md" title="Normal">A</button>
+            <button class="fontsize-btn" data-size="lg" title="Grand">A</button>
+          </div>
+        </div>
+
+        <!-- Bottom action buttons -->
+        <div class="sidebar-actions">
+          <button class="sidebar-action-btn" id="usageBtn" title="Statistiques d'utilisation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>Utilisation</span>
+          </button>
+          <button class="sidebar-action-btn" id="settingsBtn" title="Paramètres">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span>Paramètres</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+    <main class="main-content" id="mainContent">
+
+      <!-- Topbar: clés API + profil utilisateur -->
+      <div class="topbar">
+        <!-- Hamburger mobile -->
+        <button class="topbar-hamburger" id="sidebarToggleBtn" title="Ouvrir le menu" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <!-- Bouton Clés API → ouvre le modal dédié -->
+        <button class="topbar-keys-btn" id="apikeysOpenBtn" title="Gérer les clés API">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0">
+            <circle cx="8" cy="15" r="3"/><path d="M11 15h9M14 12v6"/><path d="M17 15h1"/>
+          </svg>
+          <span class="topbar-keys-label">Clés API</span>
+          <span class="apikeys-global-dot" id="apikeysGlobalDot"></span>
+        </button>
+
+        <!-- Profil utilisateur -->
+        <div class="topbar-user" id="sidebarUser">
+          <span class="user-avatar" id="currentUserAvatar">🐺</span>
+          <span class="user-name" id="currentUserName">Utilisateur</span>
+          <button class="btn-icon btn-icon-sm" id="manageUsersBtn" title="Gérer les utilisateurs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversation area -->
+      <div class="conversation-area" id="conversationArea">
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-logo">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="logo-clip-lg">
+                  <circle cx="16" cy="16" r="13.5"/>
+                </clipPath>
+              </defs>
+              <!-- Fond médaillon -->
+              <circle cx="16" cy="16" r="14.8" fill="#131311"/>
+              <!-- Logo SVG -->
+              <image href="assets/logo.svg" x="1.5" y="1" width="29" height="30" clip-path="url(#logo-clip-lg)" preserveAspectRatio="xMidYMid meet"/>
+              <!-- Anneau accent -->
+              <circle cx="16" cy="16" r="14.8" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <h1>Muninn</h1>
+          <p>Votre assistant IA multi-modèles</p>
+          <div class="empty-hints">
+            <div class="hint">💬 Démarrez une conversation</div>
+            <div class="hint">🎙 Mode vocal disponible</div>
+            <div class="hint">📎 Joignez des images et documents</div>
+          </div>
+        </div>
+
+        <!-- Messages container -->
+        <div class="messages-container" id="messagesContainer" style="display:none"></div>
+      </div>
+
+      <!-- Bouton scroll vers le bas -->
+      <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" title="Aller en bas" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      <!-- Attachments preview bar -->
+      <div class="attachments-bar" id="attachmentsBar"></div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <!-- Left toolbar -->
+          <div class="input-left-tools">
+            <button class="btn-voice" id="voiceBtn" title="Mode vocal (cliquez pour dicter)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+              </svg>
+            </button>
+
+            <!-- Model selector -->
+            <div class="model-selector" id="modelSelector">
+              <button class="model-selector-btn" id="modelSelectorBtn">
+                <span class="model-provider-dot" id="modelProviderDot"></span>
+                <span id="selectedModelName">Chargement...</span>
+                <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              <div class="model-dropdown" id="modelDropdown">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Textarea -->
+          <div class="input-center">
+            <textarea
+              id="promptInput"
+              placeholder="Écrivez votre message... (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
+              rows="1"
+            ></textarea>
+          </div>
+
+          <!-- Right toolbar -->
+          <div class="input-right-tools">
+            <button class="btn-icon btn-websearch" id="webSearchBtn" title="Activer la recherche web (Perplexity)">🔍</button>
+            <button class="btn-icon btn-optimize" id="optimizeBtn" title="Améliorer le prompt avec l'IA" style="display:none">✨</button>
+            <label class="btn-icon attach-btn" for="fileInput" title="Joindre un fichier ou une image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </label>
+            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.md,.json,.csv" style="display:none">
+            <button class="send-btn" id="sendBtn" disabled title="Envoyer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Compteur tokens estimé -->
+        <div class="token-counter" id="tokenCounter" style="display:none">
+          <span id="tokenCountVal">0</span> tokens
+        </div>
+
+        <!-- Format image (visible seulement si modèle image actif) -->
+        <div class="image-format-bar" id="imageFormatBar" style="display:none">
+          <span class="image-format-label">Format :</span>
+          <button class="image-format-btn active" data-ratio="1:1" title="Carré">⬜ Carré</button>
+          <button class="image-format-btn" data-ratio="16:9" title="Paysage">▭ Paysage</button>
+          <button class="image-format-btn" data-ratio="9:16" title="Portrait">▯ Portrait</button>
+        </div>
+
+        <!-- Skills bar -->
+        <div class="input-skills" id="inputSkills">
+          <div class="skills-chips" id="skillsChips">
+            <!-- Populated by JS -->
+          </div>
+          <!-- Snippets de prompts -->
+          <div class="snippets-wrap">
+            <button class="btn-icon btn-icon-sm" id="snippetsBtn" title="Bibliothèque de prompts">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </button>
+            <div class="snippets-dropdown" id="snippetsDropdown">
+              <div class="snippets-dd-header">
+                <span>Mes prompts</span>
+                <button class="btn-ghost btn-xs" id="manageSnippetsBtn">📚 Bibliothèque</button>
+              </div>
+              <div class="snippets-dd-list" id="snippetsDdList"></div>
+              <div class="snippets-dd-empty" id="snippetsDdEmpty" style="display:none">
+                <span>Aucun prompt enregistré</span>
+              </div>
+              <div class="snippets-dd-footer">
+                <button class="snippets-dd-add-btn" id="snippetsDdAddBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Créer un nouveau prompt
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-icon btn-icon-sm" id="manageSkillsBtn" title="Gérer les skills">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="input-footer">
+          <span class="tts-toggle-wrapper">
+            <button class="tts-toggle" id="ttsToggle" title="Activer la réponse vocale">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              Réponse vocale
+            </button>
+          </span>
+          <span class="char-counter" id="charCounter"></span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══════════════════ SETTINGS MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Paramètres</h2>
+        <button class="btn-icon" id="closeSettings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h3>🔑 Clés API</h3>
+          <div class="form-group">
+            <label for="geminiKeyInput">Gemini API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="geminiKeyInput" placeholder="AIza...">
+              <button class="toggle-visibility" data-target="geminiKeyInput">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="anthropicKeyInput">Anthropic API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="anthropicKeyInput" placeholder="sk-ant-...">
+              <button class="toggle-visibility" data-target="anthropicKeyInput">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="perplexityKeyInput">Perplexity API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="perplexityKeyInput" placeholder="pplx-...">
+              <button class="toggle-visibility" data-target="perplexityKeyInput">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="deepseekKeyInput">DeepSeek API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="deepseekKeyInput" placeholder="sk-...">
+              <button class="toggle-visibility" data-target="deepseekKeyInput">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="qwenKeyInput">Qwen API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="qwenKeyInput" placeholder="sk-mr-...">
+              <button class="toggle-visibility" data-target="qwenKeyInput">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="mistralKeyInput">Mistral API Key</label>
+            <div class="input-with-toggle">
+              <input type="password" id="mistralKeyInput" placeholder="z9q6u...">
+              <button class="toggle-visibility" data-target="mistralKeyInput">👁</button>
+            </div>
+          </div>
+          <button class="btn-primary" id="saveApiKeys">💾 Sauvegarder les clés</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>⚙ Génération</h3>
+          <div class="form-group">
+            <label for="tempInput">Température : <strong id="tempValue">0.7</strong></label>
+            <input type="range" id="tempInput" min="0" max="1" step="0.05" value="0.7">
+            <div class="range-labels"><span>Précis</span><span>Créatif</span></div>
+          </div>
+          <div class="form-group">
+            <label for="maxTokensInput">Tokens maximum</label>
+            <input type="number" id="maxTokensInput" value="4096" min="256" max="32768" step="256">
+          </div>
+          <div class="form-group">
+            <label for="systemPromptInput">Prompt système (optionnel)</label>
+            <textarea id="systemPromptInput" rows="4" placeholder="Vous êtes un assistant utile..."></textarea>
+          </div>
+          <button class="btn-primary" id="saveGenSettings">💾 Sauvegarder</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🎙 Voix</h3>
+          <div class="form-group">
+            <label for="voiceSelect">Voix TTS</label>
+            <select id="voiceSelect">
+              <option value="">Voix par défaut</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="speechRate">Vitesse : <strong id="speechRateValue">1.0</strong></label>
+            <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+          </div>
+        </div>
+
+        <!-- ── Budget ── -->
+        <div class="settings-section">
+          <h3>💰 Budget</h3>
+          <p class="memory-hint">Définissez vos limites de dépenses. 0 = désactivé.</p>
+
+          <!-- Barres de progression -->
+          <div class="budget-progress-block">
+            <div class="budget-progress-row">
+              <div class="budget-progress-labels">
+                <span>Aujourd'hui</span>
+                <span id="budgetDailyUsageLabel">$0.0000 / --</span>
+              </div>
+              <div class="budget-progress-bar-track">
+                <div class="budget-progress-bar-fill" id="budgetDailyBar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="budget-progress-row">
+              <div class="budget-progress-labels">
+                <span>Cette semaine</span>
+                <span id="budgetWeeklyUsageLabel">$0.0000 / --</span>
+              </div>
+              <div class="budget-progress-bar-track">
+                <div class="budget-progress-bar-fill" id="budgetWeeklyBar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="budget-progress-row">
+              <div class="budget-progress-labels">
+                <span>Ce mois</span>
+                <span id="budgetMonthlyUsageLabel">$0.0000 / --</span>
+              </div>
+              <div class="budget-progress-bar-track">
+                <div class="budget-progress-bar-fill" id="budgetMonthlyBar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="budget-row">
+            <div class="form-group">
+              <label for="budgetDailyInput">Limite journalière ($)</label>
+              <input type="number" id="budgetDailyInput" value="0" min="0" step="0.10" placeholder="0 = off">
+            </div>
+            <div class="form-group">
+              <label for="budgetWeeklyInput">Limite hebdomadaire ($)</label>
+              <input type="number" id="budgetWeeklyInput" value="0" min="0" step="0.50" placeholder="0 = off">
+            </div>
+            <div class="form-group">
+              <label for="budgetMonthlyInput">Limite mensuelle ($)</label>
+              <input type="number" id="budgetMonthlyInput" value="0" min="0" step="1" placeholder="0 = off">
+            </div>
+          </div>
+
+          <label class="budget-block-toggle">
+            <input type="checkbox" id="budgetBlockInput">
+            <span class="budget-block-label">🚫 Bloquer les envois quand la limite est atteinte</span>
+          </label>
+
+          <button class="btn-primary" id="saveBudget">💾 Sauvegarder</button>
+        </div>
+
+        <!-- ── Mémoire longue ── -->
+        <div class="settings-section">
+          <h3>🧠 Mémoire longue — <span id="memoryUserLabel">Utilisateur</span></h3>
+          <p class="memory-hint">Ces informations sont automatiquement transmises à l'IA à chaque conversation.</p>
+          <div class="form-group">
+            <textarea id="memoryInput" rows="6" maxlength="4000"
+              placeholder="Ex : Je suis développeur Python. Je préfère des réponses concises avec des exemples de code. Mon projet principal est une app de gestion d'inventaire..."></textarea>
+          </div>
+          <div class="memory-footer">
+            <span id="memoryCount" class="memory-count">0 / 4000 caractères</span>
+            <div class="memory-actions">
+              <button class="btn-secondary" id="extractMemoryBtn">⟳ Extraire de la conversation en cours</button>
+              <button class="btn-primary" id="saveMemory">Sauvegarder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ USERS MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="usersModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Utilisateurs</h2>
+        <button class="btn-icon" id="closeUsers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="users-list" id="usersList"></div>
+        <div class="add-user-form">
+          <h4>Ajouter un utilisateur</h4>
+          <div class="form-row">
+            <button type="button" id="newUserAvatarBtn" class="avatar-picker-btn" title="Choisir un emoji">🐺</button>
+            <input type="text" id="newUserName" placeholder="Nom">
+            <button class="btn-primary" id="addUserBtn">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SKILLS MODAL ════════════════════ -->
+  <div class="modal-overlay" id="skillsModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>⚡ Skills</h2>
+        <div class="modal-header-actions">
+          <button class="btn-ghost btn-xs" id="exportSkillsBtn" title="Exporter les skills personnalisés">↓ Exporter</button>
+          <label class="btn-ghost btn-xs" for="importSkillsInput" title="Importer des skills" style="cursor:pointer">↑ Importer</label>
+          <input type="file" id="importSkillsInput" accept=".json" style="display:none">
+        </div>
+        <button class="btn-icon" id="closeSkills">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="skills-list" id="skillsList"></div>
+        <div class="skill-form" id="skillForm">
+          <h4 id="skillFormTitle">Nouveau skill</h4>
+          <div class="form-row">
+            <button type="button" id="skillIconBtn" class="avatar-picker-btn" title="Choisir un emoji">⭐</button>
+            <input type="text" id="skillNameInput" placeholder="Nom du skill">
+          </div>
+          <div class="form-group">
+            <label for="skillModelSelect">Modèle préféré (optionnel)</label>
+            <select id="skillModelSelect">
+              <option value="">Garder le modèle courant</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="skillTempInput">Température : <strong id="skillTempValue">—</strong></label>
+            <input type="range" id="skillTempInput" min="-1" max="1" step="0.05" value="-1">
+          </div>
+          <div class="form-group">
+            <label for="skillPromptInput">System Prompt</label>
+            <textarea id="skillPromptInput" rows="4" placeholder="Instructions spécifiques à ce skill…"></textarea>
+          </div>
+          <input type="hidden" id="skillEditId">
+          <div class="form-row skill-form-actions">
+            <button class="btn-secondary" id="skillFormCancel">Annuler</button>
+            <button class="btn-primary" id="skillFormSave">Sauvegarder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SNIPPETS MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="snippetsModal">
+    <div class="modal modal-snippets">
+      <div class="modal-header">
+        <h2>📝 Bibliothèque de prompts</h2>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-secondary btn-sm" id="newSnippetBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouveau prompt
+          </button>
+          <button class="btn-icon" id="closeSnippets">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body snippets-modal-body">
+        <!-- Mes prompts + galerie -->
+        <div class="snippets-scroll-area">
+          <div class="skills-list" id="snippetsList"></div>
+        </div>
+        <!-- Formulaire d'ajout / édition -->
+        <div class="snippet-form-panel" id="snippetForm">
+          <div class="snippet-form-panel-header">
+            <span id="snippetFormTitle">✏️ Nouveau prompt</span>
+          </div>
+          <div class="form-group">
+            <label for="snippetTitleInput">Titre court</label>
+            <input type="text" id="snippetTitleInput" placeholder="Ex: Email pro, Analyser un texte…" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="snippetContentInput">Contenu du prompt</label>
+            <textarea id="snippetContentInput" rows="6" placeholder="Votre prompt réutilisable… Utilisez [crochets] pour indiquer ce que l'utilisateur devra remplacer."></textarea>
+          </div>
+          <input type="hidden" id="snippetEditId">
+          <div class="form-row skill-form-actions">
+            <button class="btn-secondary" id="snippetFormCancel">Annuler</button>
+            <button class="btn-primary" id="snippetFormSave">💾 Sauvegarder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ USAGE MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="usageModal">
+    <div class="modal modal-usage">
+      <div class="modal-header">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Utilisation &amp; Coûts
+        </h2>
+        <button class="btn-icon" id="closeUsage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Period tabs -->
+        <div class="usage-tabs" id="usageTabs">
+          <button class="usage-tab active" data-days="1">Aujourd'hui</button>
+          <button class="usage-tab" data-days="7">7 jours</button>
+          <button class="usage-tab" data-days="30">30 jours</button>
+          <button class="usage-tab" data-days="365">Année</button>
+          <button class="usage-tab" data-days="0">Tout</button>
+        </div>
+
+        <!-- Stats content -->
+        <div id="usageContent">
+          <p style="color:var(--text-muted);text-align:center;padding:20px 0;">Aucune donnée pour cette période.</p>
+        </div>
+
+        <div class="usage-footer">
+          <span class="usage-notice">* Coûts estimatifs basés sur les tarifs publics.</span>
+          <button class="btn-ghost btn-sm" id="clearUsageBtn">Effacer les données</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ GUIDE MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal modal-guide">
+      <div class="modal-header">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Guide des modèles
+        </h2>
+        <button class="btn-icon" id="closeGuide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Choix rapide -->
+        <div class="guide-quickpick">
+          <div class="guide-quickpick-title">Choix rapide</div>
+          <div class="guide-quickpick-grid">
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Usage quotidien</span>
+              <span class="guide-qp-model gemini">Gemini 2.5 Flash</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Code &amp; agents</span>
+              <span class="guide-qp-model anthropic">Claude Sonnet 4.6</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Actualité / web</span>
+              <span class="guide-qp-model perplexity">Sonar</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Raisonnement / maths</span>
+              <span class="guide-qp-model deepseek">DeepSeek R1</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Sciences / PhD</span>
+              <span class="guide-qp-model anthropic">Claude Opus 4.6</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Polyvalent &amp; économique</span>
+              <span class="guide-qp-model deepseek">DeepSeek V3.2</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Réponse ultra-rapide</span>
+              <span class="guide-qp-model gemini">Gemini 2.0 Flash Lite</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Contexte ultra-long</span>
+              <span class="guide-qp-model qwen">Qwen Turbo</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Multimodal léger</span>
+              <span class="guide-qp-model" style="background:rgba(255,112,0,.15);color:#FF7000;">Mistral Small 3.1</span>
+            </div>
+            <div class="guide-qp-item">
+              <span class="guide-qp-label">Expérimental / contexte 1M</span>
+              <span class="guide-qp-model" style="background:rgba(110,86,207,.15);color:#8B7CF8;">Optimus Alpha</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Gemini -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-gemini)"></span>
+            Google Gemini
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 3.1 Pro</span>
+                <span class="guide-badge new">Nouveau</span>
+              </div>
+              <span class="guide-use">Intelligence Index #1 mondial (57/100) — raisonnement, code, multimodal, contexte 1M</span>
+              <span class="guide-price p3">$$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 3 Flash</span>
+              </div>
+              <span class="guide-use">Rapide et polyvalent — dialogues, résumés, tâches courantes</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 2.5 Pro</span>
+              </div>
+              <span class="guide-use">Référence production stable — code, données, contexte 1M, préféré des praticiens IA</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 2.5 Flash</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Meilleur rapport qualité/prix du marché — rapide, contexte 1M, usage quotidien universel</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 2.0 Flash</span>
+              </div>
+              <span class="guide-use">Bon équilibre vitesse/qualité — images, conversations longues, multimodal</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini 2.0 Flash Lite</span>
+              </div>
+              <span class="guide-use">Ultra-rapide et quasi-gratuit — classification, Q&amp;A simple, volume élevé</span>
+              <span class="guide-price p0">¢</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Perplexity -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-perplexity)"></span>
+            Perplexity — recherche web en temps réel
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Sonar Pro</span>
+              </div>
+              <span class="guide-use">Recherche web approfondie, faits récents complexes, sources multiples</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Sonar</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Actualités, questions factuelles rapides, vérification d'infos</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Sonar Reasoning Pro</span>
+              </div>
+              <span class="guide-use">Analyse complexe avec sources web, raisonnement + recherche</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Sonar Reasoning</span>
+              </div>
+              <span class="guide-use">Raisonnement rapide appuyé sur des sources internet</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">R1-1776</span>
+                <span class="guide-badge offline">Offline</span>
+              </div>
+              <span class="guide-use">Raisonnement pur sans web — logique, maths, analyse de texte</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DeepSeek -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-deepseek)"></span>
+            DeepSeek
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">DeepSeek V3.2</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Attention sparse DSA, gold IMO/IOI — raisonnement agentic, code, maths, polyvalent au 1/10e du prix des grands modèles</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">DeepSeek R1</span>
+              </div>
+              <span class="guide-use">Raisonnement style o1 — maths, logique formelle, analyse scientifique complexe</span>
+              <span class="guide-price p1">$</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Qwen -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-qwen)"></span>
+            Qwen — Alibaba / DashScope
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Qwen Max</span>
+              </div>
+              <span class="guide-use">#6 LMArena — rivalise avec GPT et Claude sur LiveBench, code (SWE-bench 69.6%), raisonnement</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Qwen Plus</span>
+              </div>
+              <span class="guide-use">Contexte 131K, instruction-following solide — bon compromis performance / coût</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Qwen Turbo</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Contexte 1M tokens à $0.05/1M — ultra-rapide, 252% moins cher que Qwen 3 8B</span>
+              <span class="guide-price p0">¢</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anthropic Claude -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-anthropic)"></span>
+            Anthropic Claude
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Claude Opus 4.6</span>
+              </div>
+              <span class="guide-use">GPQA 91.3% (niveau PhD), ARC-AGI-2 68.8% — raisonnement le plus profond, agents longs, sciences</span>
+              <span class="guide-price p3">$$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Claude Sonnet 4.6</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">SWE-bench 79.6%, agents agentic — préféré par 70% des utilisateurs, 5× moins cher qu'Opus</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Claude Haiku 4.5</span>
+              </div>
+              <span class="guide-use">SWE-bench 73.3% — équivalent Sonnet 4 à 1/3 du prix, volume élevé, tâches structurées</span>
+              <span class="guide-price p1">$</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mistral AI -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-mistral, #FF7000)"></span>
+            Mistral AI
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Mistral Large</span>
+              </div>
+              <span class="guide-use">Flagship Mistral — raisonnement avancé, multilinguisme, code, instruction-following complexe</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Mistral Small 3.1</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Multimodal (images), vision, code léger, tâches courantes — excellent rapport qualité/prix</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Mistral Small</span>
+              </div>
+              <span class="guide-use">Polyvalent rapide, latence faible — classification, résumé, Q&amp;A structuré</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Ministral 8B</span>
+              </div>
+              <span class="guide-use">Modèle léger on-device/edge — tâches simples, faible coût, déploiement rapide</span>
+              <span class="guide-price p0">¢</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OpenRouter -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-openrouter, #6E56CF)"></span>
+            OpenRouter — modèles exclusifs
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiniMax M2.7</span>
+                <span class="guide-badge new">Nouveau</span>
+              </div>
+              <span class="guide-use">MiniMax — auto-évolutif, 200K contexte, 30-50% du workflow RL en autonomie — productivité réelle de pointe</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiniMax M2.5</span>
+              </div>
+              <span class="guide-use">MiniMax — SOTA productivité réelle, 196K contexte, excellent en coding &amp; agents</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiniMax M2.5 (Gratuit)</span>
+                <span class="guide-badge" style="background:var(--accent-success,#22c55e);color:#fff;">Free</span>
+              </div>
+              <span class="guide-use">MiniMax M2.5 sans frais — idéal pour tester, prototyper ou les tâches à faible volume</span>
+              <span class="guide-price p0">¢</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">DeepSeek V3.2 (OR)</span>
+              </div>
+              <span class="guide-use">DeepSeek V3.2 via OpenRouter — accès avec clé OR uniquement, utile si l'API directe est indisponible</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">DeepSeek R1 (OR)</span>
+              </div>
+              <span class="guide-use">DeepSeek R1 via OpenRouter — raisonnement avancé sans clé DeepSeek séparée, même qualité</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiMo V2 Pro</span>
+              </div>
+              <span class="guide-use">Xiaomi — 1T+ paramètres, contexte 1M, concurrent de Claude Opus — agents, raisonnement avancé, polyvalence</span>
+              <span class="guide-price p2">$$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiMo V2 Omni</span>
+              </div>
+              <span class="guide-use">Xiaomi — omnimodal natif : texte, images, vidéo &amp; audio — 256K contexte, glisser une image pour l'analyser</span>
+              <span class="guide-price p1">$</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">MiMo V2 Flash</span>
+              </div>
+              <span class="guide-use">Xiaomi — version rapide et très économique — tâches quotidiennes, résumés, reformulation, chat</span>
+              <span class="guide-price p0">¢</span>
+            </div>
+          </div>
+          <div style="padding:6px 8px 4px;font-size:0.75rem;color:var(--text-muted);line-height:1.6;">
+            💡 Tous ces modèles utilisent votre clé OpenRouter. MiniMax M2.5 (Gratuit) ne nécessite aucun crédit.
+          </div>
+        </div>
+
+        <!-- Génération d'images -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-gemini)"></span>
+            Génération d'images — Google Gemini
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini Image Ultra</span>
+                <span class="guide-badge new">Nouveau</span>
+              </div>
+              <span class="guide-use">Gemini 3 Pro — fidélité maximale, texte dans l'image, cohérence de personnage, compositions complexes</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.04/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini Image Pro</span>
+              </div>
+              <span class="guide-use">Gemini 3.1 Flash — haute qualité, styles complexes, cohérence de personnage, édition multi-tour</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.04/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Gemini Image</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Gemini 2.5 Flash — rapide, portraits, paysages, illustrations — meilleur rapport qualité/vitesse</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.04/img</span>
+            </div>
+          </div>
+          <div style="padding:6px 8px 4px;font-size:0.75rem;color:var(--text-muted);line-height:1.6;">
+            💡 Activez un modèle image dans le sélecteur pour générer des images dans le chat.<br>
+            ⚠️ Imagen 4 (Google) non disponible : son endpoint <code style="font-size:0.7rem;">:predict</code> bloque les appels navigateur (CORS).
+          </div>
+        </div>
+
+        <!-- Génération d'images — OpenRouter -->
+        <div class="guide-section">
+          <div class="guide-section-header">
+            <span class="guide-dot" style="background:var(--provider-openrouter, #6E56CF)"></span>
+            Génération d'images — OpenRouter
+          </div>
+          <div class="guide-rows">
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">FLUX 1.1 Pro</span>
+                <span class="guide-badge star">⭐ Recommandé</span>
+              </div>
+              <span class="guide-use">Black Forest Labs — meilleure qualité réaliste 2026, génération en ~4s — portraits, paysages, photoréalisme</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.04/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">FLUX 2 Klein</span>
+              </div>
+              <span class="guide-use">Black Forest Labs — ultra-rapide et économique — idéal pour les aperçus, itérations rapides de prompt</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.014/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Ideogram v3</span>
+              </div>
+              <span class="guide-use">Ideogram — roi du texte lisible dans les images — logos, affiches, posters, branding, maquettes</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.06/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Recraft V4</span>
+              </div>
+              <span class="guide-use">Recraft — approche design pro, compositions maîtrisées — brand assets, print, éditorial, illustration</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.04/img</span>
+            </div>
+            <div class="guide-row">
+              <div class="guide-row-left">
+                <span class="guide-model-name">Seedream 4.5</span>
+              </div>
+              <span class="guide-use">ByteDance — portraits fins, détails précis, couleurs riches, cohérence de sujet et textes intégrés</span>
+              <span class="guide-price" style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">$0.03/img</span>
+            </div>
+          </div>
+          <div style="padding:6px 8px 4px;font-size:0.75rem;color:var(--text-muted);line-height:1.6;">
+            💡 Ces modèles utilisent votre clé OpenRouter. Formats supportés : 1:1, 16:9, 9:16.
+          </div>
+        </div>
+
+        <!-- Légende prix -->
+        <div class="guide-legend">
+          <span class="guide-legend-title">Coût estimatif :</span>
+          <span class="guide-price p0">¢</span> &lt; 0.1 $/1M tokens
+          <span class="guide-price p1" style="margin-left:10px;">$</span> 0.1 – 3 $/1M
+          <span class="guide-price p2" style="margin-left:10px;">$$</span> 3 – 10 $/1M
+          <span class="guide-price p3" style="margin-left:10px;">$$$</span> &gt; 10 $/1M
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ FOLDERS MODAL ════════════════ -->
+  <div class="modal-overlay" id="foldersModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>📁 Dossiers &amp; Étiquettes</h2>
+        <button class="btn-icon" id="closeFolders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Dossiers -->
+        <div class="folders-section">
+          <h4>Dossiers</h4>
+          <div class="folders-list" id="foldersList"></div>
+          <div class="folder-add-form">
+            <input type="color" id="newFolderColor" value="#6366f1" title="Couleur" class="color-input">
+            <input type="text" id="newFolderName" placeholder="Nom du dossier…" class="folder-name-input">
+            <button class="btn-primary btn-sm" id="addFolderBtn">+</button>
+          </div>
+        </div>
+        <!-- Tags -->
+        <div class="folders-section" style="margin-top:20px">
+          <h4>Étiquettes</h4>
+          <div class="tags-list" id="tagsList"></div>
+          <div class="folder-add-form">
+            <input type="color" id="newTagColor" value="#f59e0b" title="Couleur" class="color-input">
+            <input type="text" id="newTagName" placeholder="Nom de l'étiquette…" class="folder-name-input">
+            <button class="btn-primary btn-sm" id="addTagBtn">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MODAL CLÉS API ═══════════════════ -->
+  <div class="modal-overlay" id="apikeysModal">
+    <div class="modal modal-apikeys">
+      <div class="modal-header">
+        <h2>🔑 Clés API</h2>
+        <button class="btn-icon" id="closeApikeys">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="apikeys-desc">
+          🔒 Vos clés sont stockées <strong>localement dans votre navigateur</strong> et ne transitent jamais par un serveur tiers.
+          Sur VPS, videz <code>credentials.json</code> et bloquez son accès public via nginx.
+        </p>
+
+        <!-- Gemini -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-gemini)"></span>
+            <span class="apikey-provider-name">Google Gemini</span>
+            <span class="apikey-status unset" id="apikeyStatus_gemini">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_gemini" placeholder="AIza…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_gemini" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="gemini" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- Anthropic -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-anthropic)"></span>
+            <span class="apikey-provider-name">Anthropic Claude</span>
+            <span class="apikey-status unset" id="apikeyStatus_anthropic">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_anthropic" placeholder="sk-ant-…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_anthropic" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="anthropic" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- Perplexity -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-perplexity)"></span>
+            <span class="apikey-provider-name">Perplexity</span>
+            <span class="apikey-status unset" id="apikeyStatus_perplexity">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_perplexity" placeholder="pplx-…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_perplexity" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="perplexity" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- DeepSeek -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-deepseek)"></span>
+            <span class="apikey-provider-name">DeepSeek</span>
+            <span class="apikey-status unset" id="apikeyStatus_deepseek">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_deepseek" placeholder="sk-…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_deepseek" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="deepseek" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- Qwen -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-qwen)"></span>
+            <span class="apikey-provider-name">Qwen (Alibaba)</span>
+            <span class="apikey-status unset" id="apikeyStatus_qwen">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_qwen" placeholder="sk-mr-…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_qwen" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="qwen" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- Mistral -->
+        <div class="apikey-card" data-provider="mistral">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-mistral, #FF7000)"></span>
+            <span class="apikey-provider-name">Mistral AI</span>
+            <span class="apikey-status unset" id="apikeyStatus_mistral">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_mistral" placeholder="z9q6u…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_mistral" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="mistral" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <!-- OpenRouter -->
+        <div class="apikey-card">
+          <div class="apikey-card-header">
+            <span class="apikey-provider-dot" style="background:var(--provider-openrouter)"></span>
+            <span class="apikey-provider-name">OpenRouter</span>
+            <span class="apikey-status unset" id="apikeyStatus_openrouter">○ Non configurée</span>
+          </div>
+          <div class="apikey-input-row">
+            <input type="password" id="apikeyInput_openrouter" placeholder="sk-or-…" class="apikey-card-input" autocomplete="off">
+            <button class="btn-icon apikey-toggle-vis" data-target="apikeyInput_openrouter" title="Voir / masquer">👁</button>
+            <button class="btn-icon apikey-clear-btn" data-provider="openrouter" title="Supprimer la clé">🗑</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="saveApikeysModal" style="width:100%;margin-top:8px">
+          💾 Sauvegarder toutes les clés
+        </button>
+
+        <!-- ── Providers personnalisés ── -->
+        <div class="apikeys-divider"></div>
+        <div class="apikeys-section-title">🧩 Providers personnalisés</div>
+        <p class="apikeys-subdesc">Ajoutez n'importe quel provider OpenAI-compatible (OpenAI, Mistral, Ollama, LM Studio…). Le provider apparaît dans le sélecteur de modèles.</p>
+        <div id="customProvidersContainer"></div>
+
+        <!-- Formulaire ajout provider -->
+        <div class="apikey-add-form">
+          <div class="apikey-add-form-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+            <span>Connecter un nouveau provider</span>
+          </div>
+          <div class="apikey-add-grid">
+            <div class="apikey-add-field">
+              <label for="cprov_preset">
+                <span class="apikey-field-icon">🔌</span> Provider
+              </label>
+              <select id="cprov_preset" class="apikey-card-input">
+                <option value="">— Choisir —</option>
+                <option value="openai"   data-endpoint="https://api.openai.com/v1/chat/completions"            data-model="gpt-4o">OpenAI</option>
+                <option value="mistral"  data-endpoint="https://api.mistral.ai/v1/chat/completions"            data-model="mistral-large-latest">Mistral AI</option>
+                <option value="xai"      data-endpoint="https://api.x.ai/v1/chat/completions"                  data-model="grok-3">xAI Grok</option>
+                <option value="cohere"   data-endpoint="https://api.cohere.com/compatibility/v1/chat/completions" data-model="command-r-plus">Cohere</option>
+                <option value="custom"   data-endpoint=""                                                       data-model="">Autre (personnalisé)</option>
+              </select>
+            </div>
+            <div class="apikey-add-field">
+              <label for="cprov_model">
+                <span class="apikey-field-icon">🤖</span> ID du modèle
+              </label>
+              <input type="text" id="cprov_model" placeholder="ex : gpt-4o" class="apikey-card-input" autocomplete="off">
+            </div>
+            <div class="apikey-add-field apikey-add-field-full" id="cprov_endpoint_row" style="display:none">
+              <label for="cprov_endpoint">
+                <span class="apikey-field-icon">🌐</span> Endpoint URL
+              </label>
+              <input type="text" id="cprov_endpoint" placeholder="https://…/v1/chat/completions" class="apikey-card-input" autocomplete="off">
+            </div>
+            <div class="apikey-add-field apikey-add-field-full">
+              <label for="cprov_key">
+                <span class="apikey-field-icon">🔑</span> Clé API
+              </label>
+              <div class="apikey-add-key-row">
+                <input type="password" id="cprov_key" placeholder="sk-…" class="apikey-card-input" autocomplete="off">
+                <button class="btn-primary" id="addCustomProviderBtn">Ajouter →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guide d'utilisation -->
+        <details class="apikey-guide">
+          <summary class="apikey-guide-summary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+            Comment ajouter un provider ?
+          </summary>
+          <div class="apikey-guide-body">
+            <p class="apikey-guide-intro">Muninn supporte n'importe quel provider compatible avec l'API OpenAI. Voici les configurations les plus communes :</p>
+            <div class="apikey-guide-cards">
+              <div class="apikey-guide-card">
+                <div class="apikey-guide-card-title">🤖 OpenAI</div>
+                <div class="apikey-guide-card-row"><span>Modèle</span><code>gpt-4o</code></div>
+                <div class="apikey-guide-card-row"><span>Endpoint</span><code>https://api.openai.com/v1/chat/completions</code></div>
+                <div class="apikey-guide-card-row"><span>Clé</span><code>sk-…</code></div>
+              </div>
+              <div class="apikey-guide-card">
+                <div class="apikey-guide-card-title">🌊 Mistral AI</div>
+                <div class="apikey-guide-card-row"><span>Modèle</span><code>mistral-large-latest</code></div>
+                <div class="apikey-guide-card-row"><span>Endpoint</span><code>https://api.mistral.ai/v1/chat/completions</code></div>
+                <div class="apikey-guide-card-row"><span>Clé</span><code>votre clé Mistral</code></div>
+              </div>
+              <div class="apikey-guide-card">
+                <div class="apikey-guide-card-title">⚡ Groq</div>
+                <div class="apikey-guide-card-row"><span>Modèle</span><code>llama-3.3-70b-versatile</code></div>
+                <div class="apikey-guide-card-row"><span>Endpoint</span><code>https://api.groq.com/openai/v1/chat/completions</code></div>
+                <div class="apikey-guide-card-row"><span>Clé</span><code>gsk_…</code></div>
+              </div>
+              <div class="apikey-guide-card">
+                <div class="apikey-guide-card-title">🏠 Ollama (local)</div>
+                <div class="apikey-guide-card-row"><span>Modèle</span><code>llama3.2</code></div>
+                <div class="apikey-guide-card-row"><span>Endpoint</span><code>http://localhost:11434/v1/chat/completions</code></div>
+                <div class="apikey-guide-card-row"><span>Clé</span><code>ollama</code></div>
+              </div>
+            </div>
+            <p class="apikey-guide-tip">💡 L'ID modèle est la chaîne exacte à envoyer à l'API (ex : <code>gpt-4o-mini</code>). Consultez la documentation de votre provider pour trouver les identifiants disponibles.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ QUICK FOLDER MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="quickFolderModal">
+    <div class="modal" style="max-width:340px">
+      <div class="modal-header">
+        <h2>📁 Nouveau dossier</h2>
+        <button class="btn-icon" id="closeQuickFolderModal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="quickFolderName" placeholder="Nom du dossier…" class="settings-input" style="width:100%;margin-bottom:10px" autocomplete="off">
+        <div class="quick-folder-colors" id="quickFolderColors"></div>
+        <label style="font-size:12px;color:var(--text-muted);margin-top:8px;display:block">
+          <input type="checkbox" id="quickFolderMove" checked style="margin-right:5px">
+          Placer cette conversation dans le dossier
+        </label>
+        <button class="btn-primary" id="quickFolderConfirm" style="width:100%;margin-top:14px">Créer le dossier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+  <script src="js/config.js"></script>
+  <!-- Lightbox images -->
+  <div id="lightboxOverlay" class="lightbox-overlay">
+    <button id="lightboxClose" class="lightbox-close">&times;</button>
+    <img id="lightboxImg" class="lightbox-img" src="" alt="">
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
