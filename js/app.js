@@ -2373,6 +2373,15 @@ ${messagesHtml}
   }
 
   function initApiKeysModal() {
+    // Alimenter les liens "🔗 Obtenir une clé" depuis le registre Providers
+    if (typeof Providers !== 'undefined') {
+      for (const p of API_PROVIDERS) {
+        const link = $('apikeyGetlink_' + p.id);
+        const meta = Providers.get(p.id);
+        if (link && meta && meta.getKeyUrl) link.href = meta.getKeyUrl;
+      }
+    }
+
     // Ouvrir depuis le bouton sidebar
     const openBtn = $('apikeysOpenBtn');
     if (openBtn) openBtn.addEventListener('click', openApikeysModal);
