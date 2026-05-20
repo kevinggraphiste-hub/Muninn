@@ -2582,6 +2582,18 @@ ${messagesHtml}
     buildModelDropdown();
     updateModelDisplay(Storage.getModel());
 
+    // Catalogue live : fetch OpenRouter en arrière-plan + rebuild
+    // du dropdown quand l'event arrive.
+    if (typeof Catalog !== 'undefined') {
+      window.addEventListener(Catalog.EVENT_NAME, (e) => {
+        if (e.detail && e.detail.added > 0) {
+          buildModelDropdown();
+          updateModelDisplay(Storage.getModel());
+        }
+      });
+      Catalog.init();
+    }
+
     // Utilisateur
     renderCurrentUser();
 
