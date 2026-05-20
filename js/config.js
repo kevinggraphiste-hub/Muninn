@@ -503,6 +503,59 @@ const MUNNIN_CONFIG = {
   ],
 };
 
+// ── Helpers de catalogue (calqués sur Gungnir/model_guide) ─────
+
+// Parse "1M tokens" / "200K tokens" / "32K tokens" → int.
+function parseContextString(str) {
+  if (!str) return null;
+  const m = String(str).match(/([\d.]+)\s*([KMB])?/i);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  const unit = (m[2] || '').toUpperCase();
+  return Math.round(n * ({ K: 1e3, M: 1e6, B: 1e9 }[unit] || 1));
+}
+
+// Tier à partir de la moyenne ($/1M tokens). Grille alignée Gungnir.
+//   free      : input == 0 && output == 0
+//   cheap     : avg ≤ 1
+//   budget    : avg ≤ 3
+//   mid       : avg ≤ 10
+//   premium   : avg ≤ 30
+//   flagship  : avg > 30
+function computeTier(pricing) {
+  if (!pricing) return 'unknown';
+  if (pricing.perImage !== undefined) return 'image';
+  const inp = pricing.inputPer1M ?? pricing.input ?? 0;
+  const out = pricing.outputPer1M ?? pricing.output ?? 0;
+  if (inp === 0 && out === 0) return 'free';
+  const avg = (inp + out) / 2;
+  if (avg <= 1)  return 'cheap';
+  if (avg <= 3)  return 'budget';
+  if (avg <= 10) return 'mid';
+  if (avg <= 30) return 'premium';
+  return 'flagship';
+}
+
+// Heuristique tool-use : flagship/chat des grands labos = true,
+// Sonar/image/embedding = false. Surcharge possible avec supportsTools explicite.
+function inferSupportsTools(model) {
+  if (model.type === 'image') return false;
+  if (model.provider === 'imagen' || model.provider === 'perplexity') return false;
+  // Modèles raisonnement bruts sans tool-use natif
+  if (/^r1-1776$|deepseek-reasoner$/i.test(model.id)) return false;
+  // Tous les autres chat sont supposés tool-capable
+  return true;
+}
+
+// Augmente chaque modèle hardcodé avec tier / contextTokens / supportsTools
+(function augmentModels() {
+  for (const m of MUNNIN_CONFIG.models) {
+    if (m.contextTokens == null && m.contextWindow) m.contextTokens = parseContextString(m.contextWindow);
+    if (m.tier == null)                              m.tier = computeTier(m.pricing);
+    if (m.supportsTools === undefined)               m.supportsTools = inferSupportsTools(m);
+  }
+})();
+
 // Récupère un modèle par son ID
 function getModelById(id) {
   return MUNNIN_CONFIG.models.find(m => m.id === id) || null;
@@ -516,4 +569,9 @@ function getModelsByProvider() {
     groups[model.provider].push(model);
   }
   return groups;
+}
+
+// Récupère les modèles filtrés par tier (free / cheap / budget / mid / premium / flagship / image)
+function getModelsByTier(tier) {
+  return MUNNIN_CONFIG.models.filter(m => m.tier === tier);
 }
