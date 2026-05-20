@@ -2233,24 +2233,83 @@ ${messagesHtml}
     { id: 'openrouter',  storageKey: 'openrouterKey',  label: 'OpenRouter',       dot: 'var(--provider-openrouter)',            placeholder: 'sk-or-…'  },
   ];
 
+  // Statuts agrégés de chaque clé après validation (alimenté par testProviderKey)
+  const apikeyStatuses = {};        // { providerId: 'valid' | 'invalid' | 'unknown' | 'testing' | 'format-error' | 'network-error' | 'unset' }
+  const apikeyTestControllers = {}; // { providerId: AbortController } pour annuler les tests en vol
+
+  // Libellés UI alignés sur Providers.STATUS
+  const APIKEY_STATUS_LABELS = {
+    unset:           '○ Non configurée',
+    'format-error':  '⚠️ Format suspect',
+    testing:         '⏳ Test en cours…',
+    valid:           '✓ Valide',
+    invalid:         '✗ Clé refusée',
+    'network-error': '⚠️ Réseau / CORS',
+    unknown:         '? Indéterminé',
+  };
+
+  function setApikeyStatusUI(providerId, statusKey, message) {
+    const el = $('apikeyStatus_' + providerId);
+    if (!el) return;
+    el.textContent = APIKEY_STATUS_LABELS[statusKey] || statusKey;
+    el.className   = 'apikey-status ' + statusKey;
+    el.title       = message || '';
+  }
+
+  // Met à jour le dot global de la sidebar selon l'agrégat des statuts
+  function refreshGlobalDot() {
+    const btn = $('apikeysOpenBtn');
+    if (!btn) return;
+    const statuses = Object.values(apikeyStatuses);
+    const anyValid   = statuses.includes('valid');
+    const anyInvalid = statuses.includes('invalid') || statuses.includes('format-error');
+    const anyWarn    = statuses.includes('network-error') || statuses.includes('unknown');
+    const anyKey     = API_PROVIDERS.some(pr => !!Storage.getSettings()[pr.storageKey]);
+    btn.classList.toggle('has-keys',    anyKey && (anyValid || !anyInvalid));
+    btn.classList.toggle('has-invalid', anyInvalid && !anyValid);
+    btn.classList.toggle('has-warning', !anyInvalid && anyWarn && !anyValid);
+  }
+
+  // Lance la validation live d'une clé pour un provider donné.
+  // Si key omis → lit la valeur du champ input courant (permet de tester avant save).
+  async function testProviderKey(providerId, key) {
+    if (typeof Providers === 'undefined') return; // dépendance js/providers.js
+    if (key === undefined) {
+      const inp = $('apikeyInput_' + providerId);
+      key = inp ? inp.value.trim() : '';
+    }
+    // Annule un test précédent en vol pour ce provider
+    if (apikeyTestControllers[providerId]) {
+      apikeyTestControllers[providerId].abort();
+    }
+    if (!key) {
+      apikeyStatuses[providerId] = Providers.STATUS.unset;
+      setApikeyStatusUI(providerId, 'unset');
+      refreshGlobalDot();
+      return;
+    }
+    const ctrl = new AbortController();
+    apikeyTestControllers[providerId] = ctrl;
+    apikeyStatuses[providerId] = Providers.STATUS.testing;
+    setApikeyStatusUI(providerId, 'testing');
+
+    const result = await Providers.validate(providerId, key, ctrl.signal);
+    // Si un autre test a démarré entretemps, ignorer ce résultat
+    if (apikeyTestControllers[providerId] !== ctrl) return;
+    apikeyStatuses[providerId] = result.status;
+    setApikeyStatusUI(providerId, result.status, result.message);
+    refreshGlobalDot();
+  }
+
   function refreshApikeysStatus() {
     const s = Storage.getSettings();
     for (const p of API_PROVIDERS) {
-      const inp    = $('apikeyInput_' + p.id);
-      const status = $('apikeyStatus_' + p.id);
-      const btn    = $('apikeysOpenBtn');
-      if (inp)    inp.value = s[p.storageKey] || '';
-      if (status) {
-        const hasKey = !!s[p.storageKey];
-        status.textContent = hasKey ? '✓ Configurée' : '○ Non configurée';
-        status.className   = 'apikey-status ' + (hasKey ? 'set' : 'unset');
-      }
-      // Mettre à jour le bouton dans la sidebar
-      if (btn) {
-        const anyKey = API_PROVIDERS.some(pr => !!Storage.getSettings()[pr.storageKey]);
-        btn.classList.toggle('has-keys', anyKey);
-      }
+      const inp = $('apikeyInput_' + p.id);
+      if (inp) inp.value = s[p.storageKey] || '';
+      // Lance un test live pour chaque clé saisie (en arrière-plan)
+      testProviderKey(p.id, s[p.storageKey] || '');
     }
+    refreshGlobalDot();
   }
 
   function renderCustomProviders() {
@@ -2337,13 +2396,31 @@ ${messagesHtml}
     // Boutons "Supprimer" par clé
     document.querySelectorAll('.apikey-clear-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const prov   = btn.dataset.provider;
-        const inp    = $('apikeyInput_' + prov);
-        const status = $('apikeyStatus_' + prov);
-        if (inp)    inp.value = '';
-        if (status) { status.textContent = '○ Non configurée'; status.className = 'apikey-status unset'; }
+        const prov = btn.dataset.provider;
+        const inp  = $('apikeyInput_' + prov);
+        if (inp) inp.value = '';
+        apikeyStatuses[prov] = (typeof Providers !== 'undefined') ? Providers.STATUS.unset : 'unset';
+        setApikeyStatusUI(prov, 'unset');
+        refreshGlobalDot();
       });
     });
+
+    // Test live au blur de chaque input (avec petit debounce sur les frappes)
+    for (const p of API_PROVIDERS) {
+      const inp = $('apikeyInput_' + p.id);
+      if (!inp) continue;
+      let typingTimer = null;
+      inp.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        // Marquer "testing" immédiatement pour signaler que ça va se passer
+        if (inp.value.trim()) setApikeyStatusUI(p.id, 'testing');
+        typingTimer = setTimeout(() => testProviderKey(p.id), 600);
+      });
+      inp.addEventListener('blur', () => {
+        clearTimeout(typingTimer);
+        testProviderKey(p.id);
+      });
+    }
 
     // Ajouter un provider personnalisé
     // Preset selector : auto-fill model + show/hide endpoint field
