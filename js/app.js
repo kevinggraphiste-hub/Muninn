@@ -95,6 +95,23 @@
     }
   }
 
+  // Badge tier pour l'affichage dans le dropdown.
+  // Grille tarifaire alignée Gungnir : ¢ = cheap, $ = budget, $$ = mid, $$$ = premium, $$$$ = flagship.
+  const TIER_GLYPHS = {
+    free:     { glyph: '∅',    title: 'Gratuit' },
+    cheap:    { glyph: '¢',    title: 'Économique (≤ 1 $/1M)' },
+    budget:   { glyph: '$',    title: 'Budget (≤ 3 $/1M)' },
+    mid:      { glyph: '$$',   title: 'Standard (≤ 10 $/1M)' },
+    premium:  { glyph: '$$$',  title: 'Premium (≤ 30 $/1M)' },
+    flagship: { glyph: '$$$$', title: 'Flagship (> 30 $/1M)' },
+    image:    { glyph: '🖼️',   title: 'Tarification par image' },
+  };
+  function renderTierBadge(tier) {
+    const meta = TIER_GLYPHS[tier];
+    if (!meta) return '';
+    return ` <span class="model-tier-badge tier-${tier}" title="${meta.title}">${meta.glyph}</span>`;
+  }
+
   function buildModelDropdown() {
     syncCustomProvidersToConfig();
     const groups = getModelsByProvider();
@@ -116,9 +133,10 @@
         const opt = document.createElement('div');
         opt.className   = 'model-option';
         opt.dataset.id  = model.id;
+        const tierBadge = renderTierBadge(model.tier);
         opt.innerHTML   = `
-          <span class="model-option-name">${model.name}</span>
-          <span class="model-option-desc">${model.description}</span>`;
+          <span class="model-option-name">${escapeHtml(model.name)}${tierBadge}</span>
+          <span class="model-option-desc">${escapeHtml(model.description || '')}</span>`;
         opt.addEventListener('click', () => selectModel(model.id));
         modelDropdown.appendChild(opt);
       }
@@ -154,14 +172,9 @@
           const opt = document.createElement('div');
           opt.className  = 'model-option';
           opt.dataset.id = model.id;
-          const nameSpan = document.createElement('span');
-          nameSpan.className   = 'model-option-name';
-          nameSpan.textContent = model.name;
-          const descSpan = document.createElement('span');
-          descSpan.className   = 'model-option-desc';
-          descSpan.textContent = model.description;
-          opt.appendChild(nameSpan);
-          opt.appendChild(descSpan);
+          opt.innerHTML  = `
+            <span class="model-option-name">${escapeHtml(model.name)}${renderTierBadge(model.tier)}</span>
+            <span class="model-option-desc">${escapeHtml(model.description || '')}</span>`;
           opt.addEventListener('click', () => selectModel(model.id));
           modelDropdown.appendChild(opt);
         }
