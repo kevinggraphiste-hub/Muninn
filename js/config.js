@@ -523,10 +523,11 @@ function parseContextString(str) {
 //   premium   : avg ≤ 30
 //   flagship  : avg > 30
 function computeTier(pricing) {
-  if (!pricing) return 'unknown';
+  if (!pricing || pricing.variable) return 'unknown';
   if (pricing.perImage !== undefined) return 'image';
   const inp = pricing.inputPer1M ?? pricing.input ?? 0;
   const out = pricing.outputPer1M ?? pricing.output ?? 0;
+  if (inp < 0 || out < 0) return 'unknown';
   if (inp === 0 && out === 0) return 'free';
   const avg = (inp + out) / 2;
   if (avg <= 1)  return 'cheap';

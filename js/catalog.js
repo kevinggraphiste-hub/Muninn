@@ -34,13 +34,18 @@ const Catalog = (() => {
   function mapORModel(raw) {
     const pricing  = raw.pricing  || {};
     const archi    = raw.architecture || {};
-    // Prix OpenRouter = $/token en string. On convertit en $/1M.
-    const inputPer1M  = (parseFloat(pricing.prompt)     || 0) * 1e6;
-    const outputPer1M = (parseFloat(pricing.completion) || 0) * 1e6;
+    // Prix OpenRouter = $/token en string. Les routeurs auto (auto, *-router)
+    // renvoient un prix négatif (-1) = tarif variable déterminé à l'exécution.
+    const promptRaw = parseFloat(pricing.prompt);
+    const compRaw   = parseFloat(pricing.completion);
+    const variable  = (promptRaw < 0) || (compRaw < 0) || Number.isNaN(promptRaw) && Number.isNaN(compRaw) && pricing.prompt === undefined;
+    const inputPer1M  = variable ? null : (promptRaw || 0) * 1e6;
+    const outputPer1M = variable ? null : (compRaw   || 0) * 1e6;
     const inputModalities = Array.isArray(archi.input_modalities) ? archi.input_modalities : [];
     const supportedParams = Array.isArray(raw.supported_parameters) ? raw.supported_parameters : [];
     const contextTokens = raw.context_length || raw.top_provider?.context_length || null;
 
+    const pricingObj = variable ? { variable: true } : { inputPer1M, outputPer1M };
     const model = {
       id:             raw.id,
       name:           prettyName(raw.name, raw.id),
@@ -51,10 +56,10 @@ const Catalog = (() => {
       supportsTools:  supportedParams.includes('tools') || supportedParams.includes('tool_choice'),
       contextTokens,
       contextWindow:  formatContextWindow(contextTokens),
-      pricing:        { inputPer1M, outputPer1M },
-      tier:           (typeof computeTier === 'function')
-                        ? computeTier({ inputPer1M, outputPer1M })
-                        : 'unknown',
+      pricing:        pricingObj,
+      tier:           variable
+                        ? 'unknown'
+                        : (typeof computeTier === 'function' ? computeTier(pricingObj) : 'unknown'),
       live:           true,  // marqueur pour distinguer hardcoded vs live
     };
     return model;
