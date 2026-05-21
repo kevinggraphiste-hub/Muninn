@@ -6,6 +6,17 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-05-21
+
+### Added
+
+- Accès rapide aux **modèles favoris** côté chat (porté de Gungnir) : le
+  sélecteur de modèles affiche une section "★ Favoris" en tête, et chaque
+  option porte une étoile pour ajouter/retirer un favori directement.
+- Synchronisation bidirectionnelle des favoris entre le Guide des modèles
+  et le sélecteur du chat (même stockage localStorage, max 5, ordre
+  d'ajout préservé).
+
 ## [2.3.1] - 2026-05-21
 
 ### Changed
