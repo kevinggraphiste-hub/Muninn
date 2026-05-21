@@ -11,6 +11,14 @@ installer.
 > avec une quarantaine de modèles d'IA (plus ~350 modèles OpenRouter chargés
 > dynamiquement).
 
+## Aperçu
+
+![Accueil de Muninn](assets/screenshots/accueil.png)
+
+| Guide des modèles | Clés API |
+|---|---|
+| ![Guide des modèles](assets/screenshots/guide-modeles.png) | ![Clés API](assets/screenshots/cles-api.png) |
+
 ---
 
 ## Sommaire
@@ -247,6 +255,14 @@ Static, multi-model LLM web app (chat, image generation, voice),
 > Muninn ("Memory"), one of Odin's two ravens alongside Huginn. The app keeps
 > your conversations and preferences in local storage and bridges to around
 > forty AI models (plus ~350 OpenRouter models loaded dynamically).
+
+## Preview
+
+![Muninn home screen](assets/screenshots/accueil.png)
+
+| Model guide | API keys |
+|---|---|
+| ![Model guide](assets/screenshots/guide-modeles.png) | ![API keys](assets/screenshots/cles-api.png) |
 
 ---
 
