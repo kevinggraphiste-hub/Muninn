@@ -458,7 +458,7 @@
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `munnin-${conv.title.replace(/[^a-z0-9\u00C0-\u024F]/gi, '').replace(/\s+/g, '-').slice(0, 40) || 'conv'}.md`;
+    a.download = `muninn-${conv.title.replace(/[^a-z0-9\u00C0-\u024F]/gi, '').replace(/\s+/g, '-').slice(0, 40) || 'conv'}.md`;
     a.click();
     URL.revokeObjectURL(url);
     toast('Conversation exportée ✓', 'success', 2000);
@@ -833,7 +833,7 @@ ${messagesHtml}
       dlLink.className    = 'image-download-btn';
       dlLink.href         = src;
       dlLink.target       = '_blank';
-      dlLink.download     = 'image-munnin.jpg';
+      dlLink.download     = 'image-muninn.jpg';
       dlLink.textContent  = '⬇ Télécharger';
       const wrap = document.createElement('div');
       wrap.className = 'image-result-wrap';
@@ -1193,7 +1193,7 @@ ${messagesHtml}
         dlLink.className   = 'image-download-btn';
         dlLink.href        = result;
         dlLink.target      = '_blank';
-        dlLink.download    = 'image-munnin.jpg';
+        dlLink.download    = 'image-muninn.jpg';
         dlLink.textContent = '⬇ Télécharger';
         const actions = document.createElement('div');
         actions.className = 'image-actions';
@@ -3875,7 +3875,7 @@ ${messagesHtml}
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = 'munnin-skills.json';
+    a.download = 'muninn-skills.json';
     a.click();
     URL.revokeObjectURL(url);
     toast(skills.length + ' skill(s) exporté(s) ✓', 'success', 2000);

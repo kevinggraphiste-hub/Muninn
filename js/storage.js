@@ -5,32 +5,32 @@
 const Storage = (() => {
 
   const KEYS = {
-    settings:       'munnin_settings',
-    users:          'munnin_users',
-    currentUserId:  'munnin_current_user',
-    theme:          'munnin_theme',
-    model:          'munnin_model',
-    usage:          'munnin_usage',
-    fontSize:       'munnin_fontsize',
+    settings:       'muninn_settings',
+    users:          'muninn_users',
+    currentUserId:  'muninn_current_user',
+    theme:          'muninn_theme',
+    model:          'muninn_model',
+    usage:          'muninn_usage',
+    fontSize:       'muninn_fontsize',
   };
 
   // ── Clés dynamiques par utilisateur ───────────
   function conversationsKey() {
-    const userId = localStorage.getItem('munnin_current_user');
+    const userId = localStorage.getItem('muninn_current_user');
     const parsed = userId ? JSON.parse(userId) : null;
-    return parsed ? `munnin_conversations_${parsed}` : 'munnin_conversations_default';
+    return parsed ? `muninn_conversations_${parsed}` : 'muninn_conversations_default';
   }
 
   function currentConvKey() {
-    const userId = localStorage.getItem('munnin_current_user');
+    const userId = localStorage.getItem('muninn_current_user');
     const parsed = userId ? JSON.parse(userId) : null;
-    return parsed ? `munnin_current_conv_${parsed}` : 'munnin_current_conv_default';
+    return parsed ? `muninn_current_conv_${parsed}` : 'muninn_current_conv_default';
   }
 
   function favModelsKey() {
-    const userId = localStorage.getItem('munnin_current_user');
+    const userId = localStorage.getItem('muninn_current_user');
     const parsed = userId ? JSON.parse(userId) : null;
-    return parsed ? `munnin_fav_models_${parsed}` : 'munnin_fav_models_default';
+    return parsed ? `muninn_fav_models_${parsed}` : 'muninn_fav_models_default';
   }
 
   // ── Helpers JSON ──────────────────────────────
@@ -46,8 +46,32 @@ const Storage = (() => {
     catch (e) { console.error('Storage write error:', e); }
   }
 
+  // Migration des clés localStorage de l'ancien préfixe (faute historique
+  // "munnin_") vers le préfixe correct "muninn_". À exécuter avant tout
+  // accès aux données. NE PAS renommer le littéral ci-dessous : c'est
+  // volontairement l'ancien préfixe.
+  function migrateLegacyKeys() {
+    const OLD = 'munnin_';          // ancien préfixe — ne pas corriger
+    const NEW = 'muninn_';
+    const oldKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(OLD) === 0) oldKeys.push(k);
+    }
+    for (const oldKey of oldKeys) {
+      const newKey = NEW + oldKey.slice(OLD.length);
+      if (localStorage.getItem(newKey) === null) {
+        localStorage.setItem(newKey, localStorage.getItem(oldKey));
+      }
+      localStorage.removeItem(oldKey);
+    }
+  }
+
   // ── Initialisation ────────────────────────────
   function init() {
+    // Migration des anciennes clés avant tout accès (sinon données perdues)
+    migrateLegacyKeys();
+
     // Clés API pré-renseignées si absentes (premier lancement)
     const settings = get(KEYS.settings) || {};
     if (!settings.geminiKey)      settings.geminiKey      = '';
@@ -85,10 +109,10 @@ const Storage = (() => {
     if (!get(KEYS.model)) set(KEYS.model, MUNINN_CONFIG.defaultModel);
 
     // Migration : ancienne clé favoris globale → clé scopée par utilisateur
-    const legacyFavs = get('munnin_guide_favs');
+    const legacyFavs = get('muninn_guide_favs');
     if (Array.isArray(legacyFavs) && legacyFavs.length && !get(favModelsKey())) {
       set(favModelsKey(), legacyFavs);
-      localStorage.removeItem('munnin_guide_favs');
+      localStorage.removeItem('muninn_guide_favs');
     }
   }
 
@@ -151,25 +175,25 @@ const Storage = (() => {
   // ── Mémoire longue par utilisateur ───────────
   function getMemory(userId) {
     if (!userId) return '';
-    return get(`munnin_memory_${userId}`, '');
+    return get(`muninn_memory_${userId}`, '');
   }
 
   function setMemory(userId, text) {
     if (!userId) return;
-    set(`munnin_memory_${userId}`, text || '');
+    set(`muninn_memory_${userId}`, text || '');
   }
 
   // ── Skills ────────────────────────────────────
   function getSkills(userId) {
     const builtIn = [...MUNINN_CONFIG.defaultSkills];
     if (!userId) return builtIn;
-    const custom = get(`munnin_skills_${userId}`, []).filter(s => !s.builtIn);
+    const custom = get(`muninn_skills_${userId}`, []).filter(s => !s.builtIn);
     return [...builtIn, ...custom];
   }
 
   function saveCustomSkills(userId, skills) {
     if (!userId) return;
-    set(`munnin_skills_${userId}`, skills.filter(s => !s.builtIn));
+    set(`muninn_skills_${userId}`, skills.filter(s => !s.builtIn));
   }
 
   function addSkill(userId, skill) {
@@ -200,12 +224,12 @@ const Storage = (() => {
 
   function getActiveSkillId(userId) {
     if (!userId) return null;
-    return get(`munnin_active_skill_${userId}`, null);
+    return get(`muninn_active_skill_${userId}`, null);
   }
 
   function setActiveSkillId(userId, skillId) {
     if (!userId) return;
-    set(`munnin_active_skill_${userId}`, skillId);
+    set(`muninn_active_skill_${userId}`, skillId);
   }
 
   function deleteUser(userId) {
@@ -214,14 +238,14 @@ const Storage = (() => {
     users = users.filter(u => u.id !== userId);
     set(KEYS.users, users);
     // Nettoyer les conversations, mémoire et skills de cet utilisateur
-    localStorage.removeItem(`munnin_conversations_${userId}`);
-    localStorage.removeItem(`munnin_current_conv_${userId}`);
-    localStorage.removeItem(`munnin_memory_${userId}`);
-    localStorage.removeItem(`munnin_skills_${userId}`);
-    localStorage.removeItem(`munnin_active_skill_${userId}`);
-    localStorage.removeItem(`munnin_folders_${userId}`);
-    localStorage.removeItem(`munnin_tags_${userId}`);
-    localStorage.removeItem(`munnin_snippets_${userId}`);
+    localStorage.removeItem(`muninn_conversations_${userId}`);
+    localStorage.removeItem(`muninn_current_conv_${userId}`);
+    localStorage.removeItem(`muninn_memory_${userId}`);
+    localStorage.removeItem(`muninn_skills_${userId}`);
+    localStorage.removeItem(`muninn_active_skill_${userId}`);
+    localStorage.removeItem(`muninn_folders_${userId}`);
+    localStorage.removeItem(`muninn_tags_${userId}`);
+    localStorage.removeItem(`muninn_snippets_${userId}`);
     // Si c'était l'utilisateur courant, passer au premier
     if (get(KEYS.currentUserId) === userId) {
       set(KEYS.currentUserId, users[0].id);
@@ -474,7 +498,7 @@ const Storage = (() => {
   // ── Dossiers ──────────────────────────────────
   function getFolders(userId) {
     if (!userId) return [];
-    return get(`munnin_folders_${userId}`, []);
+    return get(`muninn_folders_${userId}`, []);
   }
 
   function addFolder(userId, name, color) {
@@ -482,7 +506,7 @@ const Storage = (() => {
     const folders = getFolders(userId);
     const id      = 'folder_' + Date.now();
     folders.push({ id, name: name.trim(), color: color || '#6366f1', collapsed: false });
-    set(`munnin_folders_${userId}`, folders);
+    set(`muninn_folders_${userId}`, folders);
     return id;
   }
 
@@ -492,14 +516,14 @@ const Storage = (() => {
     const idx     = folders.findIndex(f => f.id === folderId);
     if (idx === -1) return false;
     folders[idx]  = { ...folders[idx], ...data };
-    set(`munnin_folders_${userId}`, folders);
+    set(`muninn_folders_${userId}`, folders);
     return true;
   }
 
   function deleteFolder(userId, folderId) {
     if (!userId) return;
     const folders = getFolders(userId).filter(f => f.id !== folderId);
-    set(`munnin_folders_${userId}`, folders);
+    set(`muninn_folders_${userId}`, folders);
     // Libérer les conversations de ce dossier
     const convs   = getConversations();
     let changed   = false;
@@ -521,7 +545,7 @@ const Storage = (() => {
   // ── Tags ──────────────────────────────────────
   function getTags(userId) {
     if (!userId) return [];
-    return get(`munnin_tags_${userId}`, []);
+    return get(`muninn_tags_${userId}`, []);
   }
 
   function addTag(userId, name, color) {
@@ -529,14 +553,14 @@ const Storage = (() => {
     const tags = getTags(userId);
     const id   = 'tag_' + Date.now();
     tags.push({ id, name: name.trim(), color: color || '#f59e0b' });
-    set(`munnin_tags_${userId}`, tags);
+    set(`muninn_tags_${userId}`, tags);
     return id;
   }
 
   function deleteTag(userId, tagId) {
     if (!userId) return;
     const tags = getTags(userId).filter(t => t.id !== tagId);
-    set(`munnin_tags_${userId}`, tags);
+    set(`muninn_tags_${userId}`, tags);
     // Retirer le tag des conversations
     const convs = getConversations();
     let changed = false;
@@ -561,7 +585,7 @@ const Storage = (() => {
   // ── Snippets de prompts ───────────────────────
   function getSnippets(userId) {
     if (!userId) return [];
-    return get(`munnin_snippets_${userId}`, []);
+    return get(`muninn_snippets_${userId}`, []);
   }
 
   function addSnippet(userId, title, content) {
@@ -569,7 +593,7 @@ const Storage = (() => {
     const snippets = getSnippets(userId);
     const id = 'snip_' + Date.now();
     snippets.push({ id, title: title.trim(), content: content.trim() });
-    set(`munnin_snippets_${userId}`, snippets);
+    set(`muninn_snippets_${userId}`, snippets);
     return id;
   }
 
@@ -579,49 +603,49 @@ const Storage = (() => {
     const idx = snippets.findIndex(s => s.id === snippetId);
     if (idx === -1) return false;
     snippets[idx] = { ...snippets[idx], ...data };
-    set(`munnin_snippets_${userId}`, snippets);
+    set(`muninn_snippets_${userId}`, snippets);
     return true;
   }
 
   function deleteSnippet(userId, snippetId) {
     if (!userId) return false;
-    set(`munnin_snippets_${userId}`, getSnippets(userId).filter(s => s.id !== snippetId));
+    set(`muninn_snippets_${userId}`, getSnippets(userId).filter(s => s.id !== snippetId));
     return true;
   }
 
   // ── Providers personnalisés (OpenAI-compatible) ─
   function getCustomProviders() {
-    return get('munnin_custom_providers', []);
+    return get('muninn_custom_providers', []);
   }
 
   function saveCustomProviders(providers) {
-    set('munnin_custom_providers', providers);
+    set('muninn_custom_providers', providers);
   }
 
   function addCustomProvider(name, modelId, endpoint, key) {
     const providers = getCustomProviders();
     const id = 'custom_' + Date.now();
     providers.push({ id, name: name.trim(), modelId: modelId.trim(), endpoint: endpoint.trim(), key: key.trim() });
-    set('munnin_custom_providers', providers);
+    set('muninn_custom_providers', providers);
     return id;
   }
 
   function deleteCustomProvider(id) {
-    set('munnin_custom_providers', getCustomProviders().filter(p => p.id !== id));
+    set('muninn_custom_providers', getCustomProviders().filter(p => p.id !== id));
   }
 
   function updateCustomProviderKey(id, key) {
     const providers = getCustomProviders();
     const idx = providers.findIndex(p => p.id === id);
-    if (idx !== -1) { providers[idx].key = key.trim(); set('munnin_custom_providers', providers); }
+    if (idx !== -1) { providers[idx].key = key.trim(); set('muninn_custom_providers', providers); }
   }
 
   function clearAll() {
-    // Supprimer toutes les clés munnin_ (incluant les clés par utilisateur)
+    // Supprimer toutes les clés muninn_ (incluant les clés par utilisateur)
     const toRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('munnin_')) toRemove.push(k);
+      if (k && k.startsWith('muninn_')) toRemove.push(k);
     }
     toRemove.forEach(k => localStorage.removeItem(k));
   }

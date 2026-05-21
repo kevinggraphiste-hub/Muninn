@@ -11,7 +11,7 @@
 
 const Catalog = (() => {
 
-  const CACHE_KEY      = 'munnin_catalog_or_cache';
+  const CACHE_KEY      = 'muninn_catalog_or_cache';
   const CACHE_TTL_MS   = 5 * 60 * 1000;          // 5 minutes
   const REFRESH_PERIOD = 15 * 60 * 1000;         // refresh périodique en arrière-plan
   const ENDPOINT       = 'https://openrouter.ai/api/v1/models';
