@@ -756,6 +756,12 @@ ${messagesHtml}
     return d.innerHTML;
   }
 
+  // escapeHtml ne neutralise pas les guillemets ; pour une valeur insérée
+  // dans un attribut HTML (src="…"), on échappe aussi " et '.
+  function escapeAttr(text) {
+    return escapeHtml(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function renderMarkdown(text) {
     if (!renderMarkdown._configured && window.hljs) {
       const renderer = new marked.Renderer();
@@ -813,7 +819,7 @@ ${messagesHtml}
       : (model ? escapeHtml(model.name) : 'Assistant');
 
     const avatarLabel = role === 'user'
-      ? (user ? user.avatar : '🐺')
+      ? avatarMarkup(user ? user.avatar : '🐺')
       : '◈';
 
     const modelTag = role === 'assistant' && model
@@ -1672,11 +1678,27 @@ ${messagesHtml}
   }
 
   // ── Utilisateurs ─────────────────────────────
+  // Un avatar peut être un emoji ou une URL d'image (http/https/data:image).
+  // On rejette toute URL contenant des caractères dangereux pour un attribut
+  // HTML (espaces, guillemets, chevrons) — défense contre l'injection.
+  function isAvatarUrl(av) {
+    return typeof av === 'string'
+      && /^(https?:\/\/|data:image\/)/i.test(av)
+      && !/[\s"'<>]/.test(av);
+  }
+  // Markup d'avatar : <img> si URL, sinon l'emoji échappé.
+  function avatarMarkup(av) {
+    if (isAvatarUrl(av)) {
+      return `<img class="avatar-img" src="${escapeAttr(av)}" alt="" referrerpolicy="no-referrer">`;
+    }
+    return escapeHtml(av || '🐺');
+  }
+
   function renderCurrentUser() {
     const user = Storage.getCurrentUser();
     if (!user) return;
-    $('currentUserAvatar').textContent = user.avatar;
-    $('currentUserName').textContent   = user.name;
+    $('currentUserAvatar').innerHTML = avatarMarkup(user.avatar);
+    $('currentUserName').textContent = user.name;
   }
 
   // ── Skills ────────────────────────────────────
@@ -1802,11 +1824,12 @@ ${messagesHtml}
       const item = document.createElement('div');
       item.className = 'user-item' + (user.id === currentId ? ' active' : '');
       item.innerHTML = `
-        <span class="user-item-avatar" title="Changer l'emoji" data-uid="${user.id}">${user.avatar}</span>
+        <span class="user-item-avatar" title="Changer l'emoji" data-uid="${user.id}">${avatarMarkup(user.avatar)}</span>
         <span class="user-item-name">${escapeHtml(user.name)}</span>
+        <button class="user-photo-btn" title="Photo de profil depuis une URL" data-id="${user.id}">🔗</button>
         <button class="user-delete-btn" data-id="${user.id}">✕</button>`;
 
-      // Clic sur l'avatar → ouvrir le picker
+      // Clic sur l'avatar → ouvrir le picker d'emoji
       item.querySelector('.user-item-avatar').addEventListener('click', (e) => {
         e.stopPropagation();
         openEmojiPicker(e.currentTarget, (emoji) => {
@@ -1814,6 +1837,25 @@ ${messagesHtml}
           renderUsersList();
           if (Storage.getCurrentUser()?.id === user.id) renderCurrentUser();
         });
+      });
+
+      // Clic sur 🔗 → définir une photo de profil par URL
+      item.querySelector('.user-photo-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const current = isAvatarUrl(user.avatar) ? user.avatar : '';
+        const url = prompt('URL de la photo de profil (laisser vide pour revenir à un emoji) :', current);
+        if (url === null) return; // annulé
+        const trimmed = url.trim();
+        if (trimmed === '') {
+          Storage.updateUserAvatar(user.id, '🐺');
+        } else if (isAvatarUrl(trimmed)) {
+          Storage.updateUserAvatar(user.id, trimmed);
+        } else {
+          toast('URL invalide — elle doit commencer par http:// ou https://', 'error');
+          return;
+        }
+        renderUsersList();
+        if (Storage.getCurrentUser()?.id === user.id) renderCurrentUser();
       });
 
       item.addEventListener('click', (e) => {
