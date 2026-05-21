@@ -226,4 +226,4 @@ Le catalogue de modèles utilise aussi l'API publique
 
 ## Licence
 
-Tous droits réservés — projet personnel.
+Distribué sous licence **MIT** — voir [LICENSE](LICENSE).

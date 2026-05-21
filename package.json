@@ -1,7 +1,7 @@
 {
   "name": "muninn",
   "version": "2.6.0",
-  "private": true,
+  "license": "MIT",
   "description": "Application web statique multi-LLM (chat, images, voix), 100% navigateur",
   "scripts": {
     "test": "node tests/run.js"
