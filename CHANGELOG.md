@@ -6,6 +6,29 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-05-21
+
+### Added
+
+- Refonte complète du **Guide des modèles** en version dynamique inspirée
+  du plugin model_guide de Gungnir. Remplace ~445 lignes de HTML statique
+  par un moteur qui lit le catalogue complet (~390 modèles) :
+  - recherche plein-texte (nom / id / description)
+  - filtres multi-select : provider, tier, capabilities (vision / outils /
+    fichiers / image-gen)
+  - tri par prix, contexte ou nom
+  - "Choix rapide" calculé dynamiquement selon le catalogue courant
+  - grid de cards responsive ; clic sur une card = sélection du modèle
+  - compteur de résultats et légende des tiers
+  - rebuild automatique à l'arrivée du catalogue live (`catalog:updated`)
+
+### Fixed
+
+- Les routeurs auto d'OpenRouter (prix `-1` = tarif variable) ne polluent
+  plus le tri "moins cher" ni les quickpicks : ils sont marqués
+  `pricing.variable` / `tier: unknown` et affichés "Variable".
+- Suppression d'une double définition CSS `.modal-guide`.
+
 ## [2.2.0] - 2026-05-20
 
 ### Added
