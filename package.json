@@ -1,0 +1,9 @@
+{
+  "name": "muninn",
+  "version": "2.5.0",
+  "private": true,
+  "description": "Application web statique multi-LLM (chat, images, voix), 100% navigateur",
+  "scripts": {
+    "test": "node tests/run.js"
+  }
+}
