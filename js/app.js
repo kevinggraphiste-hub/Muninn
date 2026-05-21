@@ -180,8 +180,10 @@
     opt.className  = 'model-option';
     opt.dataset.id = model.id;
     const fav = isFavModel(model.id);
+    const tip = [model.name, model.description, model.contextWindow]
+      .filter(Boolean).join(' — ');
     opt.innerHTML = `
-      <div class="model-option-main">
+      <div class="model-option-main" title="${escapeHtml(tip)}">
         <span class="model-option-name">${escapeHtml(model.name)}${renderTierBadge(model.tier)}</span>
         <span class="model-option-desc">${escapeHtml(model.description || '')}</span>
       </div>
