@@ -6,6 +6,19 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-05-21
+
+### Changed
+
+- **Correction d'orthographe dans tout le code** : `MUNNIN`/`munnin`
+  (lettres N/I inversées) → `MUNINN`/`muninn`, conforme au nom du projet
+  Muninn. Touche la constante `MUNINN_CONFIG`, les clés localStorage
+  (`muninn_*`) et les assets (`Muninn.png/.svg/.svgz`).
+- Migration localStorage transparente au démarrage : les anciennes clés
+  `munnin_*` sont automatiquement recopiées vers `muninn_*` puis
+  supprimées — **aucune perte de données** (settings, clés API,
+  conversations, thème, favoris, caches).
+
 ## [2.5.0] - 2026-05-21
 
 ### Fixed
