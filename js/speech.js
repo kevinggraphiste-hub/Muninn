@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   MUNNIN — Voix (Speech-to-Text + Text-to-Speech)
+   MUNINN — Voix (Speech-to-Text + Text-to-Speech)
    Utilise le Web Speech API natif du navigateur
 ═══════════════════════════════════════════════ */
 

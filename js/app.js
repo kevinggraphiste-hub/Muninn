@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   MUNNIN — Contrôleur principal
+   MUNINN — Contrôleur principal
 ═══════════════════════════════════════════════ */
 
 (function () {
@@ -77,12 +77,12 @@
   }
 
   // ── Modèle selector ───────────────────────────
-  // Synchronise les providers personnalisés dans MUNNIN_CONFIG.models pour que getModelById() fonctionne
+  // Synchronise les providers personnalisés dans MUNINN_CONFIG.models pour que getModelById() fonctionne
   function syncCustomProvidersToConfig() {
-    MUNNIN_CONFIG.models = MUNNIN_CONFIG.models.filter(m => !m.id.startsWith('custom_'));
+    MUNINN_CONFIG.models = MUNINN_CONFIG.models.filter(m => !m.id.startsWith('custom_'));
     const customs = Storage.getCustomProviders();
     for (const cp of customs) {
-      MUNNIN_CONFIG.models.push({
+      MUNINN_CONFIG.models.push({
         id:             cp.id,
         name:           cp.name,
         description:    cp.modelId,
@@ -144,7 +144,7 @@
     }
 
     // ── Section génération d'images ───────────────
-    const imageModels = MUNNIN_CONFIG.models.filter(m => m.type === 'image');
+    const imageModels = MUNINN_CONFIG.models.filter(m => m.type === 'image');
     if (imageModels.length > 0) {
       const sep = document.createElement('div');
       sep.className = 'model-image-separator';
@@ -531,7 +531,7 @@
     try {
       let summary = '';
       if (hasGemini) {
-        const url  = MUNNIN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
+        const url  = MUNINN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
         const res  = await fetch(url, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -543,7 +543,7 @@
         const data = await res.json();
         summary    = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       } else {
-        const res  = await fetch(MUNNIN_CONFIG.endpoints.anthropic, {
+        const res  = await fetch(MUNINN_CONFIG.endpoints.anthropic, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': settings.anthropicKey,
             'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -647,14 +647,14 @@ ${messagesHtml}
     try {
       let summary = '';
       if (hasGemini) {
-        const url = MUNNIN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
+        const url = MUNINN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ systemInstruction: { parts: [{ text: sysMsg }] },
             contents: [{ role: 'user', parts: [{ text: convText }] }],
             generationConfig: { temperature: 0.3, maxOutputTokens: 512 } }) });
         summary = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       } else {
-        const res = await fetch(MUNNIN_CONFIG.endpoints.anthropic, { method: 'POST',
+        const res = await fetch(MUNINN_CONFIG.endpoints.anthropic, { method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': settings.anthropicKey,
             'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 512,
@@ -2622,7 +2622,7 @@ ${messagesHtml}
 
   function guideFilteredModels() {
     const q = guideState.search.toLowerCase();
-    let list = MUNNIN_CONFIG.models.filter(m => {
+    let list = MUNINN_CONFIG.models.filter(m => {
       if (q && !((m.name || '').toLowerCase().includes(q) || (m.id || '').toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q))) return false;
       if (guideState.providers.size && !guideState.providers.has(m.provider)) return false;
       if (guideState.tiers.size && !guideState.tiers.has(m.tier)) return false;
@@ -2683,7 +2683,7 @@ ${messagesHtml}
 
   function renderGuideFilters() {
     // Providers présents dans le catalogue
-    const present = [...new Set(MUNNIN_CONFIG.models.map(m => m.provider))];
+    const present = [...new Set(MUNINN_CONFIG.models.map(m => m.provider))];
     const provWrap = $('guideProviderFilters');
     if (provWrap) {
       provWrap.innerHTML = present.map(p =>
@@ -2731,7 +2731,7 @@ ${messagesHtml}
   function renderGuideQuickpicks() {
     const wrap = $('guideQuickpicks');
     if (!wrap) return;
-    const all = MUNNIN_CONFIG.models;
+    const all = MUNINN_CONFIG.models;
     const cheapest = (filterFn) => all.filter(filterFn).filter(m => m.type !== 'image')
       .sort((a, b) => modelAvgPrice(a) - modelAvgPrice(b))[0];
     const best = (filterFn) => all.filter(filterFn).filter(m => m.type !== 'image')
@@ -2992,7 +2992,7 @@ ${messagesHtml}
       if (!modelSelector.contains(e.target)) closeModelDropdown();
     });
 
-    // Providers personnalisés → sync dans MUNNIN_CONFIG dès le démarrage
+    // Providers personnalisés → sync dans MUNINN_CONFIG dès le démarrage
     syncCustomProvidersToConfig();
 
     // Modal Clés API
@@ -4014,7 +4014,7 @@ ${messagesHtml}
     try {
       let improved = '';
       if (hasGemini) {
-        const url = MUNNIN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
+        const url = MUNINN_CONFIG.endpoints.gemini + '/gemini-2.5-flash:generateContent?key=' + settings.geminiKey;
         const res  = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4027,7 +4027,7 @@ ${messagesHtml}
         const data = await res.json();
         improved   = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       } else {
-        const res  = await fetch(MUNNIN_CONFIG.endpoints.anthropic, {
+        const res  = await fetch(MUNINN_CONFIG.endpoints.anthropic, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -193,7 +193,7 @@ const API = (() => {
     const apiKey = Storage.getSettings().geminiKey;
     if (!apiKey) { onError('Clé API Gemini manquante. Ajoutez-la dans la barre latérale ou les Paramètres.'); return; }
 
-    const url           = `${MUNNIN_CONFIG.endpoints.gemini}/${modelId}:streamGenerateContent?key=${apiKey}&alt=sse`;
+    const url           = `${MUNINN_CONFIG.endpoints.gemini}/${modelId}:streamGenerateContent?key=${apiKey}&alt=sse`;
     const systemPrompt  = buildSystemPrompt(settings.systemPrompt || '', settings.userMemory || '');
 
     let workingMessages = messages;
@@ -318,7 +318,7 @@ const API = (() => {
       if (settings.webSearch) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.anthropic, {
+        response = await fetch(MUNINN_CONFIG.endpoints.anthropic, {
           method:  'POST',
           headers,
           body:    JSON.stringify(body),
@@ -465,7 +465,7 @@ const API = (() => {
       };
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.perplexity, {
+        response = await fetch(MUNINN_CONFIG.endpoints.perplexity, {
           method:  'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),
@@ -550,7 +550,7 @@ const API = (() => {
       if (modelId !== 'deepseek-reasoner') body.temperature = settings.temperature ?? 0.7;
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.deepseek, {
+        response = await fetch(MUNINN_CONFIG.endpoints.deepseek, {
           method:  'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),
@@ -629,7 +629,7 @@ const API = (() => {
       };
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.qwen, {
+        response = await fetch(MUNINN_CONFIG.endpoints.qwen, {
           method:  'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),
@@ -708,7 +708,7 @@ const API = (() => {
       };
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.openrouter, {
+        response = await fetch(MUNINN_CONFIG.endpoints.openrouter, {
           method:  'POST',
           headers: {
             'Authorization': 'Bearer ' + apiKey,
@@ -821,7 +821,7 @@ const API = (() => {
       };
 
       try {
-        response = await fetch(MUNNIN_CONFIG.endpoints.mistral, {
+        response = await fetch(MUNINN_CONFIG.endpoints.mistral, {
           method:  'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),
@@ -970,7 +970,7 @@ const API = (() => {
     const finalPrompt = prompt + ratioSuffix;
 
     // IMAGE + TEXT requis par certains modèles récents (ex: gemini-3.1-flash-image-preview)
-    const url  = `${MUNNIN_CONFIG.endpoints.gemini}/${modelId}:generateContent?key=${apiKey}`;
+    const url  = `${MUNINN_CONFIG.endpoints.gemini}/${modelId}:generateContent?key=${apiKey}`;
     const body = {
       contents:         [{ parts: [{ text: finalPrompt }] }],
       generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
@@ -1055,7 +1055,7 @@ const API = (() => {
 
     let response;
     try {
-      response = await fetch(MUNNIN_CONFIG.endpoints.openrouterImages, {
+      response = await fetch(MUNINN_CONFIG.endpoints.openrouterImages, {
         method:  'POST',
         headers: {
           'Authorization': 'Bearer ' + apiKey,
@@ -1159,14 +1159,14 @@ const API = (() => {
 
     try {
       if (model.provider === 'gemini') {
-        const url = `${MUNNIN_CONFIG.endpoints.gemini}/${modelId}:generateContent?key=${apiKey}`;
+        const url = `${MUNINN_CONFIG.endpoints.gemini}/${modelId}:generateContent?key=${apiKey}`;
         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: toGeminiMessages(msgs), generationConfig: { maxOutputTokens: 25, temperature: 0.4 } }) });
         if (!res.ok) return null;
         return (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
       }
       if (model.provider === 'anthropic') {
-        const res = await fetch(MUNNIN_CONFIG.endpoints.anthropic, { method: 'POST',
+        const res = await fetch(MUNINN_CONFIG.endpoints.anthropic, { method: 'POST',
           headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: modelId, max_tokens: 25, messages: toAnthropicMessages(msgs) }) });
         if (!res.ok) return null;
@@ -1183,7 +1183,7 @@ const API = (() => {
       if (model.provider === 'perplexity' || model.provider === 'deepseek' || model.provider === 'qwen') {
         const body = { model: modelId, messages: toPerplexityMessages(msgs, null), max_tokens: 25, stream: false };
         if (modelId !== 'deepseek-reasoner') body.temperature = 0.4;
-        const res = await fetch(MUNNIN_CONFIG.endpoints[model.provider], { method: 'POST',
+        const res = await fetch(MUNINN_CONFIG.endpoints[model.provider], { method: 'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body: JSON.stringify(body) });
         if (!res.ok) return null;
@@ -1193,7 +1193,7 @@ const API = (() => {
         let mMsgs = toPerplexityMessages(msgs, null);
         while (mMsgs.length > 0 && mMsgs[mMsgs.length - 1].role === 'assistant') mMsgs.pop();
         const body = { model: modelId, messages: mMsgs, max_tokens: 25, temperature: 0.4, stream: false };
-        const res = await fetch(MUNNIN_CONFIG.endpoints.mistral, { method: 'POST',
+        const res = await fetch(MUNINN_CONFIG.endpoints.mistral, { method: 'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
           body: JSON.stringify(body) });
         if (!res.ok) return null;
@@ -1201,7 +1201,7 @@ const API = (() => {
       }
       if (model.provider === 'openrouter') {
         const body = { model: modelId, messages: toPerplexityMessages(msgs, null), max_tokens: 25, temperature: 0.4, stream: false };
-        const res = await fetch(MUNNIN_CONFIG.endpoints.openrouter, { method: 'POST',
+        const res = await fetch(MUNINN_CONFIG.endpoints.openrouter, { method: 'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://muninn.local', 'X-Title': 'Muninn' },
           body: JSON.stringify(body) });
         if (!res.ok) return null;

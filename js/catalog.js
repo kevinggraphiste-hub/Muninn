@@ -5,7 +5,7 @@
    GET https://openrouter.ai/api/v1/models est public
    (pas de clé requise) et renvoie ~300 modèles avec
    pricing, context_length, modalities, supported_parameters.
-   On le merge dans MUNNIN_CONFIG.models pour étendre le
+   On le merge dans MUNINN_CONFIG.models pour étendre le
    catalogue hardcodé sans casser getModelById().
 ═══════════════════════════════════════════════ */
 
@@ -122,26 +122,26 @@ const Catalog = (() => {
     return inflight;
   }
 
-  // ── Merge dans MUNNIN_CONFIG.models ──────────────────────────
+  // ── Merge dans MUNINN_CONFIG.models ──────────────────────────
 
   // Dédoublonne par id : un modèle hardcodé bat le même id live.
   // Stratégie : on ne touche jamais aux modèles hardcodés (premier
   // chargement, non-OR). On ajoute uniquement les modèles live dont
   // l'id n'existe pas déjà.
   function mergeIntoConfig(mapped) {
-    const existingIds = new Set(MUNNIN_CONFIG.models.map(m => m.id));
+    const existingIds = new Set(MUNINN_CONFIG.models.map(m => m.id));
     const toAdd = mapped.filter(m => !existingIds.has(m.id));
     if (toAdd.length === 0) return 0;
-    MUNNIN_CONFIG.models.push(...toAdd);
+    MUNINN_CONFIG.models.push(...toAdd);
     return toAdd.length;
   }
 
   // Retire les modèles précédemment ajoutés par le live (utile au refresh
   // forcé pour ne pas accumuler les obsolètes).
   function removeLiveModels() {
-    const before = MUNNIN_CONFIG.models.length;
-    MUNNIN_CONFIG.models = MUNNIN_CONFIG.models.filter(m => !m.live);
-    return before - MUNNIN_CONFIG.models.length;
+    const before = MUNINN_CONFIG.models.length;
+    MUNINN_CONFIG.models = MUNINN_CONFIG.models.filter(m => !m.live);
+    return before - MUNINN_CONFIG.models.length;
   }
 
   // ── API publique ─────────────────────────────────────────────
@@ -154,15 +154,15 @@ const Catalog = (() => {
       if (force) removeLiveModels();
       const added = mergeIntoConfig(mapped);
       window.dispatchEvent(new CustomEvent(EVENT_NAME, {
-        detail: { ok: true, added, total: MUNNIN_CONFIG.models.length, source: 'openrouter' },
+        detail: { ok: true, added, total: MUNINN_CONFIG.models.length, source: 'openrouter' },
       }));
-      return { ok: true, added, total: MUNNIN_CONFIG.models.length };
+      return { ok: true, added, total: MUNINN_CONFIG.models.length };
     } catch (e) {
       lastOk = false;
       console.warn('[Catalog] live fetch failed, using hardcoded only:', e.message);
       // Émet quand même l'event pour que l'UI puisse refléter l'échec
       window.dispatchEvent(new CustomEvent(EVENT_NAME, {
-        detail: { ok: false, added: 0, total: MUNNIN_CONFIG.models.length, error: e.message },
+        detail: { ok: false, added: 0, total: MUNINN_CONFIG.models.length, error: e.message },
       }));
       return { ok: false, error: e.message };
     }
@@ -185,9 +185,9 @@ const Catalog = (() => {
       liveCount:        liveModels.length,
       cachedCount:      cached ? cached.length : 0,
       cacheAgeMs:       cached ? (Date.now() - (JSON.parse(localStorage.getItem(CACHE_KEY))?.timestamp || 0)) : null,
-      totalInRegistry:  MUNNIN_CONFIG.models.length,
-      hardcoded:        MUNNIN_CONFIG.models.filter(m => !m.live).length,
-      fromLive:         MUNNIN_CONFIG.models.filter(m =>  m.live).length,
+      totalInRegistry:  MUNINN_CONFIG.models.length,
+      hardcoded:        MUNINN_CONFIG.models.filter(m => !m.live).length,
+      fromLive:         MUNINN_CONFIG.models.filter(m =>  m.live).length,
     };
   }
 

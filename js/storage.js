@@ -57,10 +57,10 @@ const Storage = (() => {
     if (!settings.qwenKey)        settings.qwenKey        = '';
     if (!settings.openrouterKey)  settings.openrouterKey  = '';
     if (!settings.mistralKey)     settings.mistralKey     = '';
-    if (!settings.temperature)  settings.temperature  = MUNNIN_CONFIG.defaultGenSettings.temperature;
-    if (!settings.maxTokens)    settings.maxTokens    = MUNNIN_CONFIG.defaultGenSettings.maxTokens;
+    if (!settings.temperature)  settings.temperature  = MUNINN_CONFIG.defaultGenSettings.temperature;
+    if (!settings.maxTokens)    settings.maxTokens    = MUNINN_CONFIG.defaultGenSettings.maxTokens;
     if (!settings.systemPrompt) settings.systemPrompt = '';
-    if (!settings.speechRate)   settings.speechRate   = MUNNIN_CONFIG.defaultSpeechRate;
+    if (!settings.speechRate)   settings.speechRate   = MUNINN_CONFIG.defaultSpeechRate;
     if (!settings.ttsVoice)     settings.ttsVoice     = '';
     if (!settings.budget) {
       settings.budget = { dailyLimit: 0, weeklyLimit: 0, monthlyLimit: 0, blockOnLimit: false };
@@ -79,10 +79,10 @@ const Storage = (() => {
     }
 
     // Thème par défaut
-    if (!get(KEYS.theme)) set(KEYS.theme, MUNNIN_CONFIG.defaultTheme);
+    if (!get(KEYS.theme)) set(KEYS.theme, MUNINN_CONFIG.defaultTheme);
 
     // Modèle par défaut
-    if (!get(KEYS.model)) set(KEYS.model, MUNNIN_CONFIG.defaultModel);
+    if (!get(KEYS.model)) set(KEYS.model, MUNINN_CONFIG.defaultModel);
 
     // Migration : ancienne clé favoris globale → clé scopée par utilisateur
     const legacyFavs = get('munnin_guide_favs');
@@ -107,7 +107,7 @@ const Storage = (() => {
   }
 
   // ── Thème ─────────────────────────────────────
-  function getTheme() { return get(KEYS.theme, MUNNIN_CONFIG.defaultTheme); }
+  function getTheme() { return get(KEYS.theme, MUNINN_CONFIG.defaultTheme); }
   function setTheme(theme) { set(KEYS.theme, theme); }
 
   // ── Taille de texte ───────────────────────────
@@ -115,7 +115,7 @@ const Storage = (() => {
   function setFontSize(size) { set(KEYS.fontSize, size); }
 
   // ── Modèle courant ────────────────────────────
-  function getModel() { return get(KEYS.model, MUNNIN_CONFIG.defaultModel); }
+  function getModel() { return get(KEYS.model, MUNINN_CONFIG.defaultModel); }
   function setModel(modelId) { set(KEYS.model, modelId); }
 
   // ── Utilisateurs ─────────────────────────────
@@ -161,7 +161,7 @@ const Storage = (() => {
 
   // ── Skills ────────────────────────────────────
   function getSkills(userId) {
-    const builtIn = [...MUNNIN_CONFIG.defaultSkills];
+    const builtIn = [...MUNINN_CONFIG.defaultSkills];
     if (!userId) return builtIn;
     const custom = get(`munnin_skills_${userId}`, []).filter(s => !s.builtIn);
     return [...builtIn, ...custom];

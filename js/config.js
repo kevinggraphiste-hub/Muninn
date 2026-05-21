@@ -2,7 +2,7 @@
    MUNINN — Configuration & liste des modèles
 ═══════════════════════════════════════════════ */
 
-const MUNNIN_CONFIG = {
+const MUNINN_CONFIG = {
 
   // ── Modèles disponibles ──────────────────────
   models: [
@@ -550,7 +550,7 @@ function inferSupportsTools(model) {
 
 // Augmente chaque modèle hardcodé avec tier / contextTokens / supportsTools
 (function augmentModels() {
-  for (const m of MUNNIN_CONFIG.models) {
+  for (const m of MUNINN_CONFIG.models) {
     if (m.contextTokens == null && m.contextWindow) m.contextTokens = parseContextString(m.contextWindow);
     if (m.tier == null)                              m.tier = computeTier(m.pricing);
     if (m.supportsTools === undefined)               m.supportsTools = inferSupportsTools(m);
@@ -559,13 +559,13 @@ function inferSupportsTools(model) {
 
 // Récupère un modèle par son ID
 function getModelById(id) {
-  return MUNNIN_CONFIG.models.find(m => m.id === id) || null;
+  return MUNINN_CONFIG.models.find(m => m.id === id) || null;
 }
 
 // Récupère les modèles groupés par provider
 function getModelsByProvider() {
   const groups = {};
-  for (const model of MUNNIN_CONFIG.models) {
+  for (const model of MUNINN_CONFIG.models) {
     if (!groups[model.provider]) groups[model.provider] = [];
     groups[model.provider].push(model);
   }
@@ -574,5 +574,5 @@ function getModelsByProvider() {
 
 // Récupère les modèles filtrés par tier (free / cheap / budget / mid / premium / flagship / image)
 function getModelsByTier(tier) {
-  return MUNNIN_CONFIG.models.filter(m => m.tier === tier);
+  return MUNINN_CONFIG.models.filter(m => m.tier === tier);
 }

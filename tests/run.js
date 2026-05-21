@@ -9,7 +9,7 @@
    Astuce de chargement : les fichiers front sont des
    scripts navigateur. On les eval en remplaçant la
    déclaration top-level `const X` par `globalThis.X`
-   pour récupérer MUNNIN_CONFIG / Catalog ; les
+   pour récupérer MUNINN_CONFIG / Catalog ; les
    `function` top-level (computeTier, etc.) fuitent
    dans le scope de l'IIFE async ci-dessous.
 ═══════════════════════════════════════════════ */
@@ -45,8 +45,8 @@ function loadFront(rel, exposeConst) {
 }
 
 (async () => {
-  // config.js → expose MUNNIN_CONFIG ; computeTier/parseContextString/getModelById fuitent ici
-  eval(loadFront('js/config.js', 'MUNNIN_CONFIG'));
+  // config.js → expose MUNINN_CONFIG ; computeTier/parseContextString/getModelById fuitent ici
+  eval(loadFront('js/config.js', 'MUNINN_CONFIG'));
 
   console.log('\n— config.js —');
 
@@ -68,7 +68,7 @@ function loadFront(rel, exposeConst) {
   eq('tier négatif',  computeTier({ inputPer1M: -1, outputPer1M: -1 }), 'unknown');
 
   // augmentation des entrées hardcodées
-  const sample = MUNNIN_CONFIG.models[0];
+  const sample = MUNINN_CONFIG.models[0];
   check('augmentation: tier défini',          !!sample.tier);
   check('augmentation: supportsTools booléen', typeof sample.supportsTools === 'boolean');
 
@@ -81,7 +81,7 @@ function loadFront(rel, exposeConst) {
 
   console.log('— catalog.js (mapping OpenRouter) —');
 
-  const dupId = MUNNIN_CONFIG.models[0].id;
+  const dupId = MUNINN_CONFIG.models[0].id;
   globalThis.fetch = async () => ({
     ok: true,
     json: async () => ({ data: [
@@ -96,7 +96,7 @@ function loadFront(rel, exposeConst) {
     ] }),
   });
 
-  const before = MUNNIN_CONFIG.models.length;
+  const before = MUNINN_CONFIG.models.length;
   const res = await Catalog.refresh(true);
   check('refresh ok', res.ok === true);
   check('isLive() vrai après succès', Catalog.isLive() === true);
@@ -113,7 +113,7 @@ function loadFront(rel, exposeConst) {
   check('mapping: prix variable détecté', auto && auto.pricing.variable === true);
   eq('mapping: tier variable → unknown', auto.tier, 'unknown');
 
-  const dups = MUNNIN_CONFIG.models.filter(m => m.id === dupId);
+  const dups = MUNINN_CONFIG.models.filter(m => m.id === dupId);
   eq('dédup: id hardcodé non dupliqué', dups.length, 1);
 
   // ── Bilan ──
