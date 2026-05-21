@@ -1868,7 +1868,9 @@ html, body {
 
 .model-option {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
@@ -1877,6 +1879,13 @@ html, body {
 
 .model-option:hover { background: var(--bg-hover); }
 .model-option.selected { background: var(--accent-muted); }
+
+.model-option-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
 
 .model-option-name {
   font-size: 13px;
@@ -1888,7 +1897,28 @@ html, body {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* Étoile favori dans le dropdown de modèles */
+.model-option-fav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--border);
+  flex-shrink: 0;
+  padding: 2px;
+  transition: color 0.1s, transform 0.1s;
+}
+.model-option-fav:hover { transform: scale(1.2); }
+.model-option-fav.on { color: #f5b301; }
+
+/* En-tête section Favoris du dropdown */
+.model-group-fav { color: #f5b301; }
 
 /* Badges tier dans le sélecteur de modèle (grille calquée Gungnir) */
 .model-tier-badge {

@@ -120,6 +120,17 @@
 
     modelDropdown.innerHTML = '';
 
+    // ── Section Favoris (accès rapide, en tête) ───
+    const favIds = getFavModels();
+    const favModels = favIds.map(id => getModelById(id)).filter(Boolean);
+    if (favModels.length > 0) {
+      const favLabel = document.createElement('div');
+      favLabel.className = 'model-group-label model-group-fav';
+      favLabel.innerHTML = `<span class="model-group-dot" style="background:#f5b301"></span>★ Favoris`;
+      modelDropdown.appendChild(favLabel);
+      for (const model of favModels) modelDropdown.appendChild(makeModelOption(model));
+    }
+
     for (const [provider, models] of Object.entries(groups)) {
       const textModels = models.filter(m => m.type !== 'image');
       if (textModels.length === 0) continue;
@@ -129,17 +140,7 @@
       label.innerHTML = `<span class="model-group-dot" style="background:${dots[provider] || 'var(--text-muted)'}"></span>${labels[provider] || provider}`;
       modelDropdown.appendChild(label);
 
-      for (const model of textModels) {
-        const opt = document.createElement('div');
-        opt.className   = 'model-option';
-        opt.dataset.id  = model.id;
-        const tierBadge = renderTierBadge(model.tier);
-        opt.innerHTML   = `
-          <span class="model-option-name">${escapeHtml(model.name)}${tierBadge}</span>
-          <span class="model-option-desc">${escapeHtml(model.description || '')}</span>`;
-        opt.addEventListener('click', () => selectModel(model.id));
-        modelDropdown.appendChild(opt);
-      }
+      for (const model of textModels) modelDropdown.appendChild(makeModelOption(model));
     }
 
     // ── Section génération d'images ───────────────
@@ -168,18 +169,27 @@
         grpLabel.appendChild(document.createTextNode(imageLabels[imgProvider] || imgProvider));
         modelDropdown.appendChild(grpLabel);
 
-        for (const model of imgModels) {
-          const opt = document.createElement('div');
-          opt.className  = 'model-option';
-          opt.dataset.id = model.id;
-          opt.innerHTML  = `
-            <span class="model-option-name">${escapeHtml(model.name)}${renderTierBadge(model.tier)}</span>
-            <span class="model-option-desc">${escapeHtml(model.description || '')}</span>`;
-          opt.addEventListener('click', () => selectModel(model.id));
-          modelDropdown.appendChild(opt);
-        }
+        for (const model of imgModels) modelDropdown.appendChild(makeModelOption(model));
       }
     }
+  }
+
+  // Crée une option du dropdown de modèles avec étoile favori intégrée.
+  function makeModelOption(model) {
+    const opt = document.createElement('div');
+    opt.className  = 'model-option';
+    opt.dataset.id = model.id;
+    const fav = isFavModel(model.id);
+    opt.innerHTML = `
+      <div class="model-option-main">
+        <span class="model-option-name">${escapeHtml(model.name)}${renderTierBadge(model.tier)}</span>
+        <span class="model-option-desc">${escapeHtml(model.description || '')}</span>
+      </div>
+      <button class="model-option-fav${fav ? ' on' : ''}" data-fav="${escapeHtml(model.id)}" title="${fav ? 'Retirer des favoris' : 'Ajouter aux favoris (max 5)'}">${fav ? '★' : '☆'}</button>`;
+    opt.addEventListener('click', () => selectModel(model.id));
+    const favBtn = opt.querySelector('.model-option-fav');
+    if (favBtn) favBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFavModel(model.id); });
+    return opt;
   }
 
   function selectModel(modelId) {
@@ -2649,23 +2659,28 @@ ${messagesHtml}
   function guideInPrice(m)  { if (!m.pricing || m.pricing.variable || m.pricing.perImage !== undefined) return null; return m.pricing.inputPer1M  ?? m.pricing.input  ?? 0; }
   function guideOutPrice(m) { if (!m.pricing || m.pricing.variable || m.pricing.perImage !== undefined) return null; return m.pricing.outputPer1M ?? m.pricing.output ?? 0; }
 
-  // ── Favoris du guide (localStorage, max 5, triés en tête) ──
-  const GUIDE_FAVS_KEY = 'munnin_guide_favs';
-  const GUIDE_FAVS_MAX = 5;
-  function getGuideFavs() {
-    try { return new Set(JSON.parse(localStorage.getItem(GUIDE_FAVS_KEY)) || []); }
-    catch { return new Set(); }
+  // ── Favoris de modèles (partagés guide ↔ sélecteur du chat) ──
+  // localStorage, max 5, ordre d'ajout préservé pour l'accès rapide.
+  const FAV_MODELS_KEY = 'munnin_guide_favs';   // clé conservée pour ne pas perdre les favoris déjà posés
+  const FAV_MODELS_MAX = 5;
+  function getFavModels() {
+    try { return JSON.parse(localStorage.getItem(FAV_MODELS_KEY)) || []; }
+    catch { return []; }
   }
-  function toggleGuideFav(id) {
-    const favs = getGuideFavs();
-    if (favs.has(id)) {
-      favs.delete(id);
+  function isFavModel(id) { return getFavModels().includes(id); }
+  function toggleFavModel(id) {
+    const favs = getFavModels();
+    const idx = favs.indexOf(id);
+    if (idx !== -1) {
+      favs.splice(idx, 1);
     } else {
-      if (favs.size >= GUIDE_FAVS_MAX) { toast(`Maximum ${GUIDE_FAVS_MAX} favoris`, 'error'); return; }
-      favs.add(id);
+      if (favs.length >= FAV_MODELS_MAX) { toast(`Maximum ${FAV_MODELS_MAX} favoris`, 'error'); return; }
+      favs.push(id);
     }
-    localStorage.setItem(GUIDE_FAVS_KEY, JSON.stringify([...favs]));
-    renderGuide();
+    localStorage.setItem(FAV_MODELS_KEY, JSON.stringify(favs));
+    // Synchro des deux surfaces qui affichent les favoris
+    buildModelDropdown();
+    if ($('guideModal')?.classList.contains('open')) renderGuide();
   }
 
   function renderGuideFilters() {
@@ -2766,7 +2781,7 @@ ${messagesHtml}
     let list = guideFilteredModels();
 
     // Favoris d'abord (en conservant le tri courant à l'intérieur de chaque groupe)
-    const favs = getGuideFavs();
+    const favs = new Set(getFavModels());
     list = [...list].sort((a, b) => (favs.has(b.id) ? 1 : 0) - (favs.has(a.id) ? 1 : 0));
 
     if (countEl) countEl.textContent = `${list.length} modèle${list.length > 1 ? 's' : ''}`;
@@ -2799,7 +2814,7 @@ ${messagesHtml}
 
     // Étoile favori (stopPropagation pour ne pas sélectionner le modèle)
     grid.querySelectorAll('.guide-fav-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleGuideFav(btn.dataset.fav); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleFavModel(btn.dataset.fav); });
     });
     // Clic sur la ligne = sélection
     grid.querySelectorAll('.guide-row').forEach(row => {
