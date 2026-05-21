@@ -1838,7 +1838,8 @@ html, body {
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  min-width: 260px;
+  width: 360px;
+  max-width: calc(100vw - 40px);
   max-height: 320px;
   overflow-y: auto;
   z-index: 1000;
