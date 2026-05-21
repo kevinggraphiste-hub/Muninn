@@ -6,6 +6,21 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-05-21
+
+### Added
+
+- **Photo de profil par URL** : un avatar utilisateur peut être une URL
+  d'image (http/https ou data:image) en plus d'un emoji. Bouton 🔗 dans le
+  modal Utilisateurs pour coller ou retirer une URL. La photo s'affiche
+  ronde dans la topbar, la liste des utilisateurs et les bulles de message.
+
+### Security
+
+- L'URL d'avatar est strictement validée (pas d'espaces/guillemets/chevrons,
+  schémas http/https/data:image uniquement) et échappée dans l'attribut
+  `src`, empêchant toute injection HTML via une URL forgée.
+
 ## [2.5.1] - 2026-05-21
 
 ### Changed
