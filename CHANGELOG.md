@@ -6,6 +6,20 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-05-21
+
+### Changed
+
+- Le Guide des modèles passe des cards à un **listing tabulaire à colonnes
+  alignées** (⭐ · Modèle · Description · Ctx · Vis. · In/1M · Out/1M · Prix),
+  fidèle au plugin model_guide de Gungnir — bien plus lisible sur ~390
+  modèles.
+
+### Added
+
+- Favoris dans le guide : étoile cliquable (max 5, persistés en
+  localStorage), les modèles favoris remontent en tête du listing.
+
 ## [2.3.0] - 2026-05-21
 
 ### Added
