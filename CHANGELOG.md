@@ -6,6 +6,14 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-05-21
+
+### Fixed
+
+- Le dropdown de sélection des modèles s'étirait jusqu'au bord droit de
+  l'écran (régression v2.4.0 : flex-row + description sans wrap). Largeur
+  fixée à 360px avec troncature ellipsis des descriptions.
+
 ## [2.4.0] - 2026-05-21
 
 ### Added
