@@ -1,5 +1,7 @@
 # Muninn
 
+**🇫🇷 Français** · [🇬🇧 English](#muninn-english)
+
 Application web statique multi-modèles LLM (chat, génération d'images, voix),
 **100 % côté navigateur** — pas de serveur, pas de build, pas de dépendances à
 installer.
@@ -227,3 +229,237 @@ Le catalogue de modèles utilise aussi l'API publique
 ## Licence
 
 Distribué sous licence **MIT** — voir [LICENSE](LICENSE).
+
+<br>
+
+---
+---
+
+<br>
+
+# Muninn (English)
+
+**🇬🇧 English** · [🇫🇷 Français](#muninn)
+
+Static, multi-model LLM web app (chat, image generation, voice),
+**100% client-side** — no server, no build step, nothing to install.
+
+> Muninn ("Memory"), one of Odin's two ravens alongside Huginn. The app keeps
+> your conversations and preferences in local storage and bridges to around
+> forty AI models (plus ~350 OpenRouter models loaded dynamically).
+
+---
+
+## Table of contents
+
+- [Features](#features)
+- [Usage modes](#usage-modes)
+  - [1. Locally (recommended)](#1-locally-recommended)
+  - [2. Opening the file directly (`file://`)](#2-opening-the-file-directly-file)
+  - [3. On a VPS / static hosting](#3-on-a-vps--static-hosting)
+- [Configuring API keys](#configuring-api-keys)
+- [Pre-filling keys (`credentials.json`)](#pre-filling-keys-credentialsjson)
+- [Security — please read](#security--please-read)
+- [Project structure](#project-structure)
+- [Tests](#tests-1)
+- [External dependencies (CDN)](#external-dependencies-cdn)
+- [License](#license)
+
+---
+
+## Features
+
+- **Multi-provider**: Google Gemini, Anthropic Claude, Mistral, DeepSeek,
+  Qwen, Perplexity (Sonar) and OpenRouter — native SSE streaming from the
+  browser, no backend.
+- **API key management**: dedicated modal with **live validation** of each key
+  (✓ valid / ✗ rejected / ⏳ testing), direct "Get a key" links to each
+  provider's console, and a global status indicator.
+- **Dynamic model catalog**: ~40 built-in models + ~350 OpenRouter models
+  fetched live from the public API (5-min cache, auto-refresh). Pricing tier
+  badges (`∅ ¢ $ $$ $$$ $$$$`).
+- **Model guide**: filterable listing (search, provider, price, capabilities),
+  sortable (price / context / name), with computed "Quick picks" and
+  favorites.
+- **Favorites**: up to 5 pinned models, quick access at the top of the chat
+  selector, synced with the guide (per user).
+- **Image generation**: Imagen, FLUX, Ideogram, Recraft, Seedream.
+- **Voice**: speech-to-text (STT) and text-to-speech (TTS) via the Web Speech
+  API (fr-FR).
+- **Web search** built in via Perplexity's Sonar models.
+- **Attachments**: images and files depending on the model's capabilities.
+- **Local multi-user**, with data partitioned per profile (conversations,
+  favorites, skills). Avatar: emoji **or a photo from a URL**.
+- **Organization**: folders, tags, snippets, configurable skills (Code,
+  Writing, Research, Analysis).
+- **Budget tracking** (daily / weekly / monthly limits).
+- **Robustness**: automatic context truncation on overflow, exponential
+  backoff on 429, typed error messages (401/402/404/5xx), `<think>` block
+  extraction.
+- **4 themes**: Dark Scarlet, Dark Bronze, Color-blind (accessible), Light —
+  plus 3 text sizes.
+
+---
+
+## Usage modes
+
+The app is a set of static files. Three ways to run it.
+
+### 1. Locally (recommended)
+
+Serve the folder with any static HTTP server:
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+Equivalents: `npx serve`, `php -S localhost:8000`, the VS Code "Live Server"
+extension, etc. This is the most reliable method (behaves exactly like a real
+deployment).
+
+### 2. Opening the file directly (`file://`)
+
+Double-clicking `index.html` works in most cases (the scripts are classic
+scripts, and APIs that allow CORS `*` respond even from the `null` origin).
+
+⚠️ Known limitations of `file://` mode:
+- `credentials.json` is not loaded (harmless — the app still works).
+- Some browsers (notably Chrome) are strict in `file://` (localStorage shared
+  across local files, some requests blocked).
+
+→ If anything behaves oddly, prefer method 1.
+
+### 3. On a VPS / static hosting
+
+Since it's pure static, **any file server works** (nginx, Caddy, Apache,
+GitHub Pages, Netlify…). No backend required.
+
+**Two non-negotiable security rules:**
+
+1. **Never deploy a filled-in `credentials.json`** on public hosting: it would
+   be downloadable by anyone (`https://your-domain/credentials.json`) → key
+   leak. Either don't ship it at all (each user enters their keys via the UI),
+   or block access to it on the server.
+2. **Serve over HTTPS.**
+
+Example with **Caddy** (automatic HTTPS via Let's Encrypt):
+
+```caddy
+your-domain.com {
+    root * /var/www/muninn
+    file_server
+    @creds path /credentials.json
+    respond @creds 404      # block access to the keys file
+}
+```
+
+Example with **nginx**:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+    root /var/www/muninn;
+    index index.html;
+
+    location = /credentials.json { deny all; return 404; }
+}
+```
+
+---
+
+## Configuring API keys
+
+On first launch, open the **🔑 API Keys** modal (top bar) and paste the keys of
+the providers you want to use. Each card:
+
+- validates the key live (✓ / ✗ / ⏳);
+- offers a **"🔗 Get a key"** link to the provider's console;
+- lets you hide / delete the key.
+
+You can configure just one to start — only models from configured providers
+will be usable.
+
+You can also add a **custom provider** (any OpenAI-compatible endpoint: OpenAI,
+Ollama, LM Studio…) in the same modal.
+
+## Pre-filling keys (`credentials.json`)
+
+For **local use only**, you can create a `credentials.json` at the root to
+pre-fill keys on first launch:
+
+```json
+{
+  "gemini": "AIza...",
+  "anthropic": "sk-ant-...",
+  "perplexity": "pplx-...",
+  "deepseek": "sk-...",
+  "qwen": "sk-...",
+  "openrouter": "sk-or-...",
+  "mistral": "..."
+}
+```
+
+This file is **git-ignored** (`.gitignore`) and **must never be deployed to
+public hosting** (see the VPS section). The keys are then copied into the
+browser's `localStorage`; emptying/deleting the file does not remove keys that
+were already imported.
+
+---
+
+## Security — please read
+
+- API keys are stored in **plain text in the browser's `localStorage`**. This
+  is an architectural choice (serverless app). Use Muninn **on a trusted
+  device**.
+- Requests go **directly** from your browser to the providers' APIs — no data
+  passes through any third-party server.
+- Data is **partitioned per user** (conversations, favorites, skills) via
+  `localStorage` keys suffixed with the profile id.
+- Do not deploy a public instance with a filled-in `credentials.json`.
+
+---
+
+## Project structure
+
+```
+.
+├── index.html          # Full UI shell
+├── css/
+│   ├── themes.css      # Variables for the 4 themes
+│   └── app.css         # Application styles
+├── js/
+│   ├── config.js       # Built-in model catalog + endpoints + helpers (tier…)
+│   ├── storage.js      # localStorage persistence (per user) + migrations
+│   ├── providers.js    # Provider registry + live key validation
+│   ├── catalog.js      # Dynamic catalog (live OpenRouter fetch + cache)
+│   ├── api.js          # Multi-provider layer + SSE streaming + error handling
+│   ├── speech.js       # STT / TTS via the Web Speech API
+│   └── app.js          # Main UI controller
+├── tests/
+│   └── run.js          # Tests (pure Node, no dependencies)
+├── assets/             # Logos and images
+├── package.json        # Metadata + test script (no dependencies)
+└── CHANGELOG.md
+```
+
+## Tests
+
+The catalog's business logic is covered by a dependency-free Node harness:
+
+```bash
+npm test          # or: node tests/run.js
+```
+
+## External dependencies (CDN)
+
+- [marked](https://github.com/markedjs/marked) — Markdown rendering
+- [highlight.js](https://highlightjs.org/) — syntax highlighting
+
+The model catalog also uses the public API
+`https://openrouter.ai/api/v1/models` (no key) to stay up to date.
+
+## License
+
+Released under the **MIT** license — see [LICENSE](LICENSE).
