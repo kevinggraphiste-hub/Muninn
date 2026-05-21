@@ -2577,6 +2577,229 @@ ${messagesHtml}
     }
   }
 
+  // ── Guide des modèles (dynamique, inspiré Gungnir/model_guide) ──
+  const GUIDE_PROVIDER_LABELS = {
+    gemini: 'Gemini', anthropic: 'Claude', perplexity: 'Perplexity',
+    deepseek: 'DeepSeek', qwen: 'Qwen', mistral: 'Mistral',
+    openrouter: 'OpenRouter', imagen: 'Imagen', custom: 'Custom',
+  };
+  const GUIDE_TIERS = ['free', 'cheap', 'budget', 'mid', 'premium', 'flagship', 'image'];
+  const GUIDE_CAPS = [
+    { key: 'vision', glyph: '👁', label: 'Vision',  test: m => m.supportsImages },
+    { key: 'tools',  glyph: '🛠', label: 'Outils',  test: m => m.supportsTools },
+    { key: 'files',  glyph: '📎', label: 'Fichiers', test: m => m.supportsFiles },
+    { key: 'image',  glyph: '🖼', label: 'Image-gen', test: m => m.type === 'image' },
+  ];
+
+  const guideState = {
+    search: '',
+    sort: 'price-asc',
+    providers: new Set(),  // vide = tous
+    tiers: new Set(),      // vide = tous
+    caps: new Set(),       // vide = tous
+  };
+
+  function modelAvgPrice(m) {
+    if (!m.pricing || m.pricing.variable) return Infinity;     // prix variable (auto-routers) → fin de tri
+    if (m.pricing.perImage !== undefined) return m.pricing.perImage * 1000; // images en fin de tri prix
+    const inp = m.pricing.inputPer1M ?? m.pricing.input ?? 0;
+    const out = m.pricing.outputPer1M ?? m.pricing.output ?? 0;
+    if (inp < 0 || out < 0) return Infinity;
+    return (inp + out) / 2;
+  }
+
+  function guideFilteredModels() {
+    const q = guideState.search.toLowerCase();
+    let list = MUNNIN_CONFIG.models.filter(m => {
+      if (q && !((m.name || '').toLowerCase().includes(q) || (m.id || '').toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q))) return false;
+      if (guideState.providers.size && !guideState.providers.has(m.provider)) return false;
+      if (guideState.tiers.size && !guideState.tiers.has(m.tier)) return false;
+      if (guideState.caps.size) {
+        for (const capKey of guideState.caps) {
+          const cap = GUIDE_CAPS.find(c => c.key === capKey);
+          if (cap && !cap.test(m)) return false;
+        }
+      }
+      return true;
+    });
+
+    switch (guideState.sort) {
+      case 'price-desc':   list.sort((a, b) => modelAvgPrice(b) - modelAvgPrice(a)); break;
+      case 'context-desc': list.sort((a, b) => (b.contextTokens || 0) - (a.contextTokens || 0)); break;
+      case 'name-asc':     list.sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+      default:             list.sort((a, b) => modelAvgPrice(a) - modelAvgPrice(b)); break; // price-asc
+    }
+    return list;
+  }
+
+  function guidePriceLabel(m) {
+    if (!m.pricing) return '—';
+    if (m.pricing.variable) return 'Variable';
+    if (m.pricing.perImage !== undefined) return '$' + m.pricing.perImage.toFixed(3) + '/img';
+    const inp = m.pricing.inputPer1M ?? m.pricing.input ?? 0;
+    const out = m.pricing.outputPer1M ?? m.pricing.output ?? 0;
+    if (inp === 0 && out === 0) return 'Gratuit';
+    return `${inp.toFixed(2)} / ${out.toFixed(2)} $/1M`;
+  }
+
+  function guideCapsBadges(m) {
+    return GUIDE_CAPS.filter(c => c.test(m))
+      .map(c => `<span class="guide-card-cap" title="${c.label}">${c.glyph}</span>`).join('');
+  }
+
+  function renderGuideFilters() {
+    // Providers présents dans le catalogue
+    const present = [...new Set(MUNNIN_CONFIG.models.map(m => m.provider))];
+    const provWrap = $('guideProviderFilters');
+    if (provWrap) {
+      provWrap.innerHTML = present.map(p =>
+        `<button class="guide-chip${guideState.providers.has(p) ? ' active' : ''}" data-prov="${escapeHtml(p)}">${escapeHtml(GUIDE_PROVIDER_LABELS[p] || p)}</button>`
+      ).join('');
+      provWrap.querySelectorAll('.guide-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = btn.dataset.prov;
+          guideState.providers.has(p) ? guideState.providers.delete(p) : guideState.providers.add(p);
+          renderGuide();
+        });
+      });
+    }
+    const tierWrap = $('guideTierFilters');
+    if (tierWrap) {
+      tierWrap.innerHTML = GUIDE_TIERS.map(t => {
+        const meta = TIER_GLYPHS[t];
+        if (!meta) return '';
+        return `<button class="guide-chip tier${guideState.tiers.has(t) ? ' active' : ''}" data-tier="${t}" title="${meta.title}">${meta.glyph}</button>`;
+      }).join('');
+      tierWrap.querySelectorAll('.guide-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.dataset.tier;
+          guideState.tiers.has(t) ? guideState.tiers.delete(t) : guideState.tiers.add(t);
+          renderGuide();
+        });
+      });
+    }
+    const capWrap = $('guideCapFilters');
+    if (capWrap) {
+      capWrap.innerHTML = GUIDE_CAPS.map(c =>
+        `<button class="guide-chip cap${guideState.caps.has(c.key) ? ' active' : ''}" data-cap="${c.key}" title="${c.label}">${c.glyph}</button>`
+      ).join('');
+      capWrap.querySelectorAll('.guide-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.cap;
+          guideState.caps.has(k) ? guideState.caps.delete(k) : guideState.caps.add(k);
+          renderGuide();
+        });
+      });
+    }
+  }
+
+  // Quick picks calculés dynamiquement à partir du catalogue courant
+  function renderGuideQuickpicks() {
+    const wrap = $('guideQuickpicks');
+    if (!wrap) return;
+    const all = MUNNIN_CONFIG.models;
+    const cheapest = (filterFn) => all.filter(filterFn).filter(m => m.type !== 'image')
+      .sort((a, b) => modelAvgPrice(a) - modelAvgPrice(b))[0];
+    const best = (filterFn) => all.filter(filterFn).filter(m => m.type !== 'image')
+      .sort((a, b) => modelAvgPrice(b) - modelAvgPrice(a))[0];
+    const longest = () => all.filter(m => m.type !== 'image')
+      .sort((a, b) => (b.contextTokens || 0) - (a.contextTokens || 0))[0];
+
+    const picks = [
+      { label: 'Gratuit',          m: cheapest(m => m.tier === 'free') },
+      { label: 'Économique + outils', m: cheapest(m => m.supportsTools && m.tier !== 'free') },
+      { label: 'Vision pas chère',  m: cheapest(m => m.supportsImages) },
+      { label: 'Contexte ultra-long', m: longest() },
+      { label: 'Flagship',          m: best(() => true) },
+      { label: 'Recherche web',     m: all.find(m => m.provider === 'perplexity') },
+      { label: 'Images',            m: all.find(m => m.type === 'image') },
+    ].filter(p => p.m);
+
+    wrap.innerHTML = picks.map(p => `
+      <button class="guide-qp-item" data-id="${escapeHtml(p.m.id)}">
+        <span class="guide-qp-label">${escapeHtml(p.label)}</span>
+        <span class="guide-qp-model ${escapeHtml(p.m.provider)}">${escapeHtml(p.m.name)}</span>
+      </button>`).join('');
+    wrap.querySelectorAll('.guide-qp-item').forEach(btn => {
+      btn.addEventListener('click', () => guidePickModel(btn.dataset.id));
+    });
+  }
+
+  function renderGuideLegend() {
+    const el = $('guideLegend');
+    if (!el) return;
+    el.innerHTML = '<span class="guide-legend-title">Tiers :</span>' +
+      GUIDE_TIERS.filter(t => t !== 'image').map(t => {
+        const meta = TIER_GLYPHS[t];
+        return `<span class="model-tier-badge tier-${t}">${meta.glyph}</span> ${meta.title}`;
+      }).join(' · ');
+  }
+
+  function renderGuide() {
+    renderGuideFilters();
+    renderGuideQuickpicks();
+    renderGuideLegend();
+    const grid = $('guideGrid');
+    const countEl = $('guideResultCount');
+    if (!grid) return;
+    const list = guideFilteredModels();
+    if (countEl) countEl.textContent = `${list.length} modèle${list.length > 1 ? 's' : ''}`;
+
+    const currentId = Storage.getModel();
+    grid.innerHTML = list.map(m => `
+      <button class="guide-card${m.id === currentId ? ' selected' : ''}" data-id="${escapeHtml(m.id)}">
+        <div class="guide-card-head">
+          <span class="guide-card-dot" style="background:var(--provider-${escapeHtml(m.provider)}, #888)"></span>
+          <span class="guide-card-name">${escapeHtml(m.name)}</span>
+          ${renderTierBadge(m.tier)}
+        </div>
+        <div class="guide-card-desc">${escapeHtml(m.description || '')}</div>
+        <div class="guide-card-foot">
+          <span class="guide-card-caps">${guideCapsBadges(m)}</span>
+          <span class="guide-card-meta">${m.contextWindow ? escapeHtml(m.contextWindow) : ''}</span>
+          <span class="guide-card-price">${guidePriceLabel(m)}</span>
+        </div>
+      </button>`).join('') || '<div class="guide-empty">Aucun modèle ne correspond à ces filtres.</div>';
+
+    grid.querySelectorAll('.guide-card').forEach(card => {
+      card.addEventListener('click', () => guidePickModel(card.dataset.id));
+    });
+  }
+
+  // Sélectionne un modèle depuis le guide (s'il n'est pas image-only) et ferme
+  function guidePickModel(id) {
+    const m = getModelById(id);
+    if (!m) return;
+    selectModel(id);
+    $('guideModal').classList.remove('open');
+    toast(`Modèle « ${m.name} » sélectionné`, 'success');
+  }
+
+  function openGuide() {
+    $('guideModal').classList.add('open');
+    renderGuide();
+  }
+
+  function initGuide() {
+    const search = $('guideSearch');
+    if (search) {
+      let t = null;
+      search.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => { guideState.search = search.value.trim(); renderGuide(); }, 200);
+      });
+    }
+    const sort = $('guideSort');
+    if (sort) sort.addEventListener('change', () => { guideState.sort = sort.value; renderGuide(); });
+
+    // Rebuild si le catalogue live arrive pendant que le guide est ouvert
+    if (typeof Catalog !== 'undefined') {
+      window.addEventListener(Catalog.EVENT_NAME, () => {
+        if ($('guideModal')?.classList.contains('open')) renderGuide();
+      });
+    }
+  }
+
   // ── Initialisation ────────────────────────────
   function init() {
     // Storage
@@ -2729,11 +2952,12 @@ ${messagesHtml}
     initQuickFolderModal();
 
     // Guide modal
-    $('guideBtn').addEventListener('click', () => $('guideModal').classList.add('open'));
+    $('guideBtn').addEventListener('click', openGuide);
     $('closeGuide').addEventListener('click', () => $('guideModal').classList.remove('open'));
     $('guideModal').addEventListener('click', (e) => {
       if (e.target === $('guideModal')) $('guideModal').classList.remove('open');
     });
+    initGuide();
 
     // Usage modal
     $('usageBtn').addEventListener('click', openUsage);
