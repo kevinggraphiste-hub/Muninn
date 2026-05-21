@@ -693,8 +693,20 @@
         <!-- Compteur de résultats -->
         <div class="guide-result-count" id="guideResultCount"></div>
 
-        <!-- Grille de cards (remplie par renderGuide) -->
-        <div class="guide-grid" id="guideGrid"></div>
+        <!-- En-tête des colonnes (listing) -->
+        <div class="guide-table-head">
+          <span class="gcol-star"></span>
+          <span class="gcol-name">Modèle</span>
+          <span class="gcol-desc">Description</span>
+          <span class="gcol-ctx">Ctx</span>
+          <span class="gcol-vis">Vis.</span>
+          <span class="gcol-in">In /1M</span>
+          <span class="gcol-out">Out /1M</span>
+          <span class="gcol-tier">Prix</span>
+        </div>
+
+        <!-- Lignes du listing (remplies par renderGuide) -->
+        <div class="guide-table-body" id="guideGrid"></div>
 
         <!-- Légende tarifaire (remplie par renderGuide) -->
         <div class="guide-legend" id="guideLegend"></div>

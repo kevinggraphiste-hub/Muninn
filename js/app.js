@@ -2632,19 +2632,40 @@ ${messagesHtml}
     return list;
   }
 
-  function guidePriceLabel(m) {
-    if (!m.pricing) return '—';
-    if (m.pricing.variable) return 'Variable';
-    if (m.pricing.perImage !== undefined) return '$' + m.pricing.perImage.toFixed(3) + '/img';
-    const inp = m.pricing.inputPer1M ?? m.pricing.input ?? 0;
-    const out = m.pricing.outputPer1M ?? m.pricing.output ?? 0;
-    if (inp === 0 && out === 0) return 'Gratuit';
-    return `${inp.toFixed(2)} / ${out.toFixed(2)} $/1M`;
+  // Format contexte (calqué Gungnir fmtCtx) : 1000000 → "1M", 200000 → "200K"
+  function guideFmtCtx(n) {
+    if (!n) return '—';
+    if (n >= 1e6) return (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + 'M';
+    if (n >= 1e3) return Math.round(n / 1e3) + 'K';
+    return '' + n;
   }
+  // Format prix unitaire $/1M (calqué Gungnir fmtPrice)
+  function guideFmtPrice(n) {
+    if (n == null) return '—';
+    if (n === 0) return 'Gratuit';
+    if (n < 0.01) return n.toFixed(4);
+    return n.toFixed(2);
+  }
+  function guideInPrice(m)  { if (!m.pricing || m.pricing.variable || m.pricing.perImage !== undefined) return null; return m.pricing.inputPer1M  ?? m.pricing.input  ?? 0; }
+  function guideOutPrice(m) { if (!m.pricing || m.pricing.variable || m.pricing.perImage !== undefined) return null; return m.pricing.outputPer1M ?? m.pricing.output ?? 0; }
 
-  function guideCapsBadges(m) {
-    return GUIDE_CAPS.filter(c => c.test(m))
-      .map(c => `<span class="guide-card-cap" title="${c.label}">${c.glyph}</span>`).join('');
+  // ── Favoris du guide (localStorage, max 5, triés en tête) ──
+  const GUIDE_FAVS_KEY = 'munnin_guide_favs';
+  const GUIDE_FAVS_MAX = 5;
+  function getGuideFavs() {
+    try { return new Set(JSON.parse(localStorage.getItem(GUIDE_FAVS_KEY)) || []); }
+    catch { return new Set(); }
+  }
+  function toggleGuideFav(id) {
+    const favs = getGuideFavs();
+    if (favs.has(id)) {
+      favs.delete(id);
+    } else {
+      if (favs.size >= GUIDE_FAVS_MAX) { toast(`Maximum ${GUIDE_FAVS_MAX} favoris`, 'error'); return; }
+      favs.add(id);
+    }
+    localStorage.setItem(GUIDE_FAVS_KEY, JSON.stringify([...favs]));
+    renderGuide();
   }
 
   function renderGuideFilters() {
@@ -2742,27 +2763,47 @@ ${messagesHtml}
     const grid = $('guideGrid');
     const countEl = $('guideResultCount');
     if (!grid) return;
-    const list = guideFilteredModels();
+    let list = guideFilteredModels();
+
+    // Favoris d'abord (en conservant le tri courant à l'intérieur de chaque groupe)
+    const favs = getGuideFavs();
+    list = [...list].sort((a, b) => (favs.has(b.id) ? 1 : 0) - (favs.has(a.id) ? 1 : 0));
+
     if (countEl) countEl.textContent = `${list.length} modèle${list.length > 1 ? 's' : ''}`;
 
     const currentId = Storage.getModel();
-    grid.innerHTML = list.map(m => `
-      <button class="guide-card${m.id === currentId ? ' selected' : ''}" data-id="${escapeHtml(m.id)}">
-        <div class="guide-card-head">
-          <span class="guide-card-dot" style="background:var(--provider-${escapeHtml(m.provider)}, #888)"></span>
-          <span class="guide-card-name">${escapeHtml(m.name)}</span>
-          ${renderTierBadge(m.tier)}
-        </div>
-        <div class="guide-card-desc">${escapeHtml(m.description || '')}</div>
-        <div class="guide-card-foot">
-          <span class="guide-card-caps">${guideCapsBadges(m)}</span>
-          <span class="guide-card-meta">${m.contextWindow ? escapeHtml(m.contextWindow) : ''}</span>
-          <span class="guide-card-price">${guidePriceLabel(m)}</span>
-        </div>
-      </button>`).join('') || '<div class="guide-empty">Aucun modèle ne correspond à ces filtres.</div>';
+    grid.innerHTML = list.map(m => {
+      const isFav  = favs.has(m.id);
+      const inP    = guideInPrice(m);
+      const outP   = guideOutPrice(m);
+      const tierMeta = TIER_GLYPHS[m.tier];
+      const tierSym  = tierMeta ? tierMeta.glyph : '?';
+      const priceImg = m.pricing && m.pricing.perImage !== undefined;
+      return `
+      <div class="guide-row${m.id === currentId ? ' selected' : ''}" data-id="${escapeHtml(m.id)}">
+        <span class="gcol-star">
+          <button class="guide-fav-btn${isFav ? ' on' : ''}" data-fav="${escapeHtml(m.id)}" title="${isFav ? 'Retirer des favoris' : 'Ajouter aux favoris (max 5)'}">${isFav ? '★' : '☆'}</button>
+        </span>
+        <span class="gcol-name">
+          <span class="guide-row-dot" style="background:var(--provider-${escapeHtml(m.provider)}, #888)"></span>
+          ${escapeHtml(m.name)}
+        </span>
+        <span class="gcol-desc" title="${escapeHtml(m.description || '')}">${escapeHtml(m.description || '—')}</span>
+        <span class="gcol-ctx">${guideFmtCtx(m.contextTokens)}</span>
+        <span class="gcol-vis">${m.supportsImages ? '<span class="gv-yes">✓</span>' : '<span class="gv-no">—</span>'}</span>
+        <span class="gcol-in${inP === 0 ? ' free' : ''}">${priceImg ? '🖼' : guideFmtPrice(inP)}</span>
+        <span class="gcol-out${outP === 0 ? ' free' : ''}">${priceImg ? '—' : guideFmtPrice(outP)}</span>
+        <span class="gcol-tier"><span class="model-tier-badge tier-${escapeHtml(m.tier || 'unknown')}" title="${tierMeta ? tierMeta.title : ''}">${tierSym}</span></span>
+      </div>`;
+    }).join('') || '<div class="guide-empty">Aucun modèle ne correspond à ces filtres.</div>';
 
-    grid.querySelectorAll('.guide-card').forEach(card => {
-      card.addEventListener('click', () => guidePickModel(card.dataset.id));
+    // Étoile favori (stopPropagation pour ne pas sélectionner le modèle)
+    grid.querySelectorAll('.guide-fav-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleGuideFav(btn.dataset.fav); });
+    });
+    // Clic sur la ligne = sélection
+    grid.querySelectorAll('.guide-row').forEach(row => {
+      row.addEventListener('click', () => guidePickModel(row.dataset.id));
     });
   }
 

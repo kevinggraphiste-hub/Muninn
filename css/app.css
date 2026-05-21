@@ -2148,48 +2148,85 @@ html, body {
 /* Compteur */
 .guide-result-count { font-size: 11px; color: var(--text-muted); padding: 0 2px; }
 
-/* Grille de cards */
-.guide-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
-  gap: 8px;
+/* Listing tabulaire (style Gungnir/model_guide) */
+.guide-table-head,
+.guide-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+/* En-tête de colonnes */
+.guide-table-head {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card-alt);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+/* Le header réutilise les classes gcol-* (alignement) mais garde son style propre */
+.guide-table-head span {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.guide-table-body {
   overflow-y: auto;
   flex: 1;
-  padding-right: 4px;
+  padding-right: 2px;
 }
-.guide-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
+.guide-row {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
   cursor: pointer;
-  text-align: left;
-  transition: border-color 0.12s, transform 0.05s;
+  transition: background 0.1s;
 }
-.guide-card:hover { border-color: var(--accent); }
-.guide-card:active { transform: scale(0.99); }
-.guide-card.selected { border-color: var(--accent); background: var(--accent-muted); }
-.guide-card-head { display: flex; align-items: center; gap: 6px; }
-.guide-card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.guide-card-name { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; line-height: 1.2; }
-.guide-card-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.guide-row:hover { background: var(--bg-hover, rgba(255,255,255,0.03)); }
+.guide-row.selected { background: var(--accent-muted); }
+
+/* Colonnes — largeurs alignées sur Gungnir */
+.gcol-star { width: 24px; flex-shrink: 0; display: flex; justify-content: center; }
+.gcol-name {
+  flex: 0.85; min-width: 0;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 6px;
 }
-.guide-card-foot { display: flex; align-items: center; gap: 6px; margin-top: auto; }
-.guide-card-caps { display: flex; gap: 3px; }
-.guide-card-cap { font-size: 11px; }
-.guide-card-meta { font-size: 10px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
-.guide-card-price { font-size: 10px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
-.guide-empty { grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--text-muted); font-size: 13px; }
+.gcol-desc {
+  flex: 1.5; min-width: 0;
+  font-size: 11px; color: var(--text-muted); font-style: italic;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 6px;
+}
+.gcol-ctx   { width: 46px; flex-shrink: 0; text-align: center; font-size: 11px; font-family: ui-monospace, monospace; color: var(--text-secondary); }
+.gcol-vis   { width: 38px; flex-shrink: 0; text-align: center; font-size: 11px; }
+.gcol-in,
+.gcol-out   { width: 64px; flex-shrink: 0; text-align: right; font-size: 11px; font-family: ui-monospace, monospace; color: var(--text-secondary); }
+.gcol-in.free, .gcol-out.free { color: #22c55e; }
+.gcol-tier  { width: 44px; flex-shrink: 0; text-align: center; }
+
+.guide-row-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.gv-yes { color: #14b8a6; font-weight: 600; }
+.gv-no  { color: var(--text-muted); opacity: 0.4; }
+
+.guide-fav-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-size: 14px; line-height: 1; color: var(--text-muted);
+  transition: color 0.1s, transform 0.1s;
+}
+.guide-fav-btn:hover { transform: scale(1.2); }
+.guide-fav-btn.on { color: #f5b301; }
+
+.guide-empty { text-align: center; padding: 30px; color: var(--text-muted); font-size: 13px; }
 
 /* Légende */
 .guide-legend {
