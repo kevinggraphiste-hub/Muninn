@@ -2660,13 +2660,9 @@ ${messagesHtml}
   function guideOutPrice(m) { if (!m.pricing || m.pricing.variable || m.pricing.perImage !== undefined) return null; return m.pricing.outputPer1M ?? m.pricing.output ?? 0; }
 
   // ── Favoris de modèles (partagés guide ↔ sélecteur du chat) ──
-  // localStorage, max 5, ordre d'ajout préservé pour l'accès rapide.
-  const FAV_MODELS_KEY = 'munnin_guide_favs';   // clé conservée pour ne pas perdre les favoris déjà posés
+  // Stockés via Storage, scopés par utilisateur, max 5, ordre d'ajout préservé.
   const FAV_MODELS_MAX = 5;
-  function getFavModels() {
-    try { return JSON.parse(localStorage.getItem(FAV_MODELS_KEY)) || []; }
-    catch { return []; }
-  }
+  function getFavModels() { return Storage.getFavModels(); }
   function isFavModel(id) { return getFavModels().includes(id); }
   function toggleFavModel(id) {
     const favs = getFavModels();
@@ -2677,7 +2673,7 @@ ${messagesHtml}
       if (favs.length >= FAV_MODELS_MAX) { toast(`Maximum ${FAV_MODELS_MAX} favoris`, 'error'); return; }
       favs.push(id);
     }
-    localStorage.setItem(FAV_MODELS_KEY, JSON.stringify(favs));
+    Storage.setFavModels(favs);
     // Synchro des deux surfaces qui affichent les favoris
     buildModelDropdown();
     if ($('guideModal')?.classList.contains('open')) renderGuide();

@@ -27,6 +27,12 @@ const Storage = (() => {
     return parsed ? `munnin_current_conv_${parsed}` : 'munnin_current_conv_default';
   }
 
+  function favModelsKey() {
+    const userId = localStorage.getItem('munnin_current_user');
+    const parsed = userId ? JSON.parse(userId) : null;
+    return parsed ? `munnin_fav_models_${parsed}` : 'munnin_fav_models_default';
+  }
+
   // ── Helpers JSON ──────────────────────────────
   function get(key, fallback = null) {
     try {
@@ -77,7 +83,18 @@ const Storage = (() => {
 
     // Modèle par défaut
     if (!get(KEYS.model)) set(KEYS.model, MUNNIN_CONFIG.defaultModel);
+
+    // Migration : ancienne clé favoris globale → clé scopée par utilisateur
+    const legacyFavs = get('munnin_guide_favs');
+    if (Array.isArray(legacyFavs) && legacyFavs.length && !get(favModelsKey())) {
+      set(favModelsKey(), legacyFavs);
+      localStorage.removeItem('munnin_guide_favs');
+    }
   }
+
+  // ── Favoris de modèles (scopés par utilisateur) ──
+  function getFavModels() { return get(favModelsKey(), []); }
+  function setFavModels(arr) { set(favModelsKey(), Array.isArray(arr) ? arr : []); }
 
   // ── Paramètres ────────────────────────────────
   function getSettings() {
@@ -628,6 +645,7 @@ const Storage = (() => {
     getTags, addTag, deleteTag, setConvTags,
     getSnippets, addSnippet, updateSnippet, deleteSnippet,
     getCustomProviders, saveCustomProviders, addCustomProvider, deleteCustomProvider, updateCustomProviderKey,
+    getFavModels, setFavModels,
   };
 
 })();
