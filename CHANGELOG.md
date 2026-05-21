@@ -6,6 +6,26 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-05-21
+
+### Fixed
+
+- **Favoris scopés par utilisateur** : la liste de favoris vivait dans une
+  clé localStorage globale, donc partagée entre profils. Elle est désormais
+  suffixée par l'id utilisateur (comme les conversations), avec migration
+  automatique de l'ancienne clé au premier lancement.
+
+### Added
+
+- Indicateur **"⚠ catalogue live indisponible"** dans le Guide des modèles
+  quand le fetch OpenRouter échoue (hors-ligne / CORS / service down).
+  L'app reste fonctionnelle avec les modèles intégrés.
+- Tooltip (nom — description — contexte) au survol des options du sélecteur
+  de modèles, dont les descriptions sont tronquées.
+- **Tests automatisés** sans dépendance (`npm test`) : 28 assertions sur la
+  logique du catalogue (tiers, conversion de prix, prix variables,
+  déduplication, mapping OpenRouter).
+
 ## [2.4.1] - 2026-05-21
 
 ### Fixed
