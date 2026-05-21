@@ -2780,7 +2780,11 @@ ${messagesHtml}
     const favs = new Set(getFavModels());
     list = [...list].sort((a, b) => (favs.has(b.id) ? 1 : 0) - (favs.has(a.id) ? 1 : 0));
 
-    if (countEl) countEl.textContent = `${list.length} modèle${list.length > 1 ? 's' : ''}`;
+    if (countEl) {
+      const offline = (typeof Catalog !== 'undefined' && Catalog.isLive() === false);
+      countEl.innerHTML = `${list.length} modèle${list.length > 1 ? 's' : ''}` +
+        (offline ? ' <span class="guide-offline-warn" title="Le catalogue OpenRouter live n\'a pas pu être chargé (hors-ligne ou indisponible). Seuls les modèles intégrés sont affichés.">⚠ catalogue live indisponible</span>' : '');
+    }
 
     const currentId = Storage.getModel();
     grid.innerHTML = list.map(m => {

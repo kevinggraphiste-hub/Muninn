@@ -19,6 +19,7 @@ const Catalog = (() => {
 
   let inflight = null;        // promesse de fetch en cours, pour dédup
   let liveModels = [];        // dernier snapshot live mappé (sert au merge)
+  let lastOk = null;          // null = pas encore tenté, true/false = état du dernier fetch
 
   // ── Mapping OpenRouter → format Muninn ──────────────────────
 
@@ -149,18 +150,26 @@ const Catalog = (() => {
     try {
       const mapped = await fetchLive(force);
       liveModels = mapped;
+      lastOk = true;
       if (force) removeLiveModels();
       const added = mergeIntoConfig(mapped);
-      const evt = new CustomEvent(EVENT_NAME, {
-        detail: { added, total: MUNNIN_CONFIG.models.length, source: 'openrouter' },
-      });
-      window.dispatchEvent(evt);
+      window.dispatchEvent(new CustomEvent(EVENT_NAME, {
+        detail: { ok: true, added, total: MUNNIN_CONFIG.models.length, source: 'openrouter' },
+      }));
       return { ok: true, added, total: MUNNIN_CONFIG.models.length };
     } catch (e) {
+      lastOk = false;
       console.warn('[Catalog] live fetch failed, using hardcoded only:', e.message);
+      // Émet quand même l'event pour que l'UI puisse refléter l'échec
+      window.dispatchEvent(new CustomEvent(EVENT_NAME, {
+        detail: { ok: false, added: 0, total: MUNNIN_CONFIG.models.length, error: e.message },
+      }));
       return { ok: false, error: e.message };
     }
   }
+
+  // true si le dernier fetch a réussi, false si échec, null si pas encore tenté
+  function isLive() { return lastOk; }
 
   // À appeler une fois au boot. Lance le refresh sans bloquer.
   function init() {
@@ -182,5 +191,5 @@ const Catalog = (() => {
     };
   }
 
-  return { init, refresh, status, EVENT_NAME };
+  return { init, refresh, status, isLive, EVENT_NAME };
 })();

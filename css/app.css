@@ -2178,6 +2178,7 @@ html, body {
 
 /* Compteur */
 .guide-result-count { font-size: 11px; color: var(--text-muted); padding: 0 2px; }
+.guide-offline-warn { color: #d29922; font-weight: 600; margin-left: 6px; }
 
 /* Listing tabulaire (style Gungnir/model_guide) */
 .guide-table-head,
